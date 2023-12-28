@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{259A30DB-EEEC-4C72-8172-2567FE83BF08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend.Fx.Execution", "src\Backend.Fx.Execution\Backend.Fx.Execution.csproj", "{61C48D13-B402-4E20-8BE1-4F159200A3A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend.Fx.Execution.Abstractions", "src\Backend.Fx.Execution.Abstractions\Backend.Fx.Execution.Abstractions.csproj", "{9FD4870F-4745-4BBE-8524-21E56087B4E7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{259A30DB-EEEC-4C72-8172-2567FE83BF08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{259A30DB-EEEC-4C72-8172-2567FE83BF08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61C48D13-B402-4E20-8BE1-4F159200A3A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61C48D13-B402-4E20-8BE1-4F159200A3A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61C48D13-B402-4E20-8BE1-4F159200A3A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61C48D13-B402-4E20-8BE1-4F159200A3A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FD4870F-4745-4BBE-8524-21E56087B4E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FD4870F-4745-4BBE-8524-21E56087B4E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FD4870F-4745-4BBE-8524-21E56087B4E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FD4870F-4745-4BBE-8524-21E56087B4E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
