@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Backend.Fx.Logging;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -46,6 +47,23 @@ namespace Backend.Fx.Execution
                 Application.Dispose();
                 return Task.CompletedTask;
             }
+        }
+    }
+
+    [PublicAPI]
+    public static class BackendFxApplicationHostedServiceExtensions
+    {
+        public static void AddBackendFxApplication<THostedService, TApplication>(this IServiceCollection services)
+            where THostedService : class, IBackendFxApplicationHostedService<TApplication>
+            where TApplication : class, IBackendFxApplication
+        {
+            services.AddSingleton<THostedService>();
+
+            // this registration ensures starting of the hosted service
+            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<THostedService>());
+
+            // this registration makes the application instance available as singleton
+            services.AddSingleton(provider => provider.GetRequiredService<THostedService>().Application);
         }
     }
 }
