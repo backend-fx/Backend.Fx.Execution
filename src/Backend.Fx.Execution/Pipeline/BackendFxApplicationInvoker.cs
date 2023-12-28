@@ -19,10 +19,7 @@ namespace Backend.Fx.Execution.Pipeline
             _application = application;
         }
 
-        public async Task InvokeAsync(
-            Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity identity = null,
-            CancellationToken cancellationToken = default)
+        public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, IIdentity identity = null, CancellationToken cancellationToken = default)
         {
             identity ??= new AnonymousIdentity();
             _logger.LogInformation("Invoking action as {Identity}", identity.Name);
@@ -67,5 +64,6 @@ namespace Backend.Fx.Execution.Pipeline
                 $"Starting invocation (correlation [{correlation.Id}]) for {identity.Name}",
                 $"Ended invocation (correlation [{correlation.Id}]) for {identity.Name}");
         }
+
     }
 }

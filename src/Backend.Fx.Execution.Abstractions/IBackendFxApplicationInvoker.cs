@@ -21,14 +21,4 @@ public interface IBackendFxApplicationInvoker
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, 
         IIdentity identity = null, 
         CancellationToken cancellationToken = default);
-        
-    /// <summary>
-    /// Run a delegate through the full execution pipeline, having its separate injection scope 
-    /// </summary>
-    /// <param name="awaitableAsyncAction">The async action to be invoked by the application</param>
-    /// <param name="identity">The acting identity</param>
-    /// <returns>The <see cref="Task"/> representing the async invocation.</returns>
-    Task InvokeAsync(
-        Func<IServiceProvider, Task> awaitableAsyncAction, 
-        IIdentity identity = null);
 }
