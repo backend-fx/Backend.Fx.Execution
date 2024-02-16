@@ -35,7 +35,15 @@ namespace Backend.Fx.Execution.Pipeline
             }
             catch
             {
-                await operation.CancelAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await operation.CancelAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to cancel the operation");
+                }
+
                 throw;
             }
         }
