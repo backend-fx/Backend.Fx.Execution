@@ -2,6 +2,7 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+using Backend.Fx.Execution.Pipeline;
 using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution;
@@ -21,4 +22,10 @@ public interface IBackendFxApplicationInvoker
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, 
         IIdentity identity = null, 
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Execute a command through the full execution pipeline, having its separate injection scope. If the command
+    /// should return a result, it should be made available as a property on the command itself
+    /// </summary>
+    Task Execute(ICommand command);
 }

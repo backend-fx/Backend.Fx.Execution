@@ -2,6 +2,7 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+using Backend.Fx.Exceptions;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,8 @@ namespace Backend.Fx.Execution.Pipeline
             _application = application;
         }
 
-        public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, IIdentity identity = null, CancellationToken cancellationToken = default)
+        public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
+            IIdentity identity = null, CancellationToken cancellationToken = default)
         {
             identity ??= new AnonymousIdentity();
             _logger.LogInformation("Invoking action as {Identity}", identity.Name);
@@ -48,9 +50,22 @@ namespace Backend.Fx.Execution.Pipeline
             }
         }
 
-        public Task InvokeAsync(Func<IServiceProvider, Task> awaitableAsyncAction, IIdentity identity = null)
-            => InvokeAsync((sp, _) => awaitableAsyncAction.Invoke(sp), identity);
+        public async Task Execute(ICommand command)
+        {
+            await InvokeAsync(
+                async (sp, ct) =>
+                {
+                    if (command is IAuthorizedCommand authorizedCommand &&
+                        !authorizedCommand.AsyncAuthorization(sp, ct))
+                    {
+                        throw new ForbiddenException();
+                    }
 
+                    await command.AsyncInvocation.Invoke(sp, ct);
+                },
+                command.Identity,
+                command.CancellationToken);
+        }
 
         private IServiceScope BeginScope(IIdentity identity)
         {
@@ -72,6 +87,5 @@ namespace Backend.Fx.Execution.Pipeline
                 $"Starting invocation (correlation [{correlation.Id}]) for {identity.Name}",
                 $"Ended invocation (correlation [{correlation.Id}]) for {identity.Name}");
         }
-
     }
 }
