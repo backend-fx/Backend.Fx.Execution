@@ -2,8 +2,6 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using Backend.Fx.Exceptions;
-using Backend.Fx.Execution.Commands;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,37 +47,6 @@ namespace Backend.Fx.Execution.Pipeline
 
                 throw;
             }
-        }
-
-        public async Task Execute(ICommand command)
-        {
-            await InvokeAsync(
-                async (sp, ct) =>
-                {
-                    if (command is IAuthorizedCommand authorizedCommand &&
-                        !await authorizedCommand.AsyncAuthorization(sp, ct).ConfigureAwait(false))
-                    {
-                        throw new ForbiddenException();
-                    }
-
-                    await command.AsyncInvocation.Invoke(sp, ct).ConfigureAwait(false);
-                },
-                command.Identity,
-                command.CancellationToken);
-        }
-
-        public async Task Execute(IInvokerCommand command)
-        {
-            await InvokeAsync(async (sp, ct) =>
-            {
-                if (command is IAuthorizedCommand authorizedCommand &&
-                    !await authorizedCommand.AsyncAuthorization(sp, ct).ConfigureAwait(false))
-                {
-                    throw new ForbiddenException();
-                }
-            });
-
-            await command.AsyncInvocation.Invoke(this, command.CancellationToken).ConfigureAwait(false);
         }
 
         private IServiceScope BeginScope(IIdentity identity)

@@ -2,7 +2,6 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using Backend.Fx.Execution.Commands;
 using Backend.Fx.Logging;
 
 namespace Backend.Fx.Execution.Pipeline
@@ -20,38 +19,15 @@ namespace Backend.Fx.Execution.Pipeline
 
         public async Task InvokeAsync(
             Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity identity, 
+            IIdentity identity = null, 
             CancellationToken cancellationToken = default)
         {
             try
             {
-                await _invoker.InvokeAsync(awaitableAsyncAction, identity, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _exceptionLogger.LogException(ex);
-                throw;
-            }
-        }
-        
-        public async Task Execute(ICommand command)
-        {
-            try
-            {
-                await _invoker.Execute(command).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _exceptionLogger.LogException(ex);
-                throw;
-            }
-        }
-
-        public async Task Execute(IInvokerCommand command)
-        {
-            try
-            {
-                await _invoker.Execute(command).ConfigureAwait(false);
+                await _invoker.InvokeAsync(
+                    awaitableAsyncAction,
+                    identity ?? new AnonymousIdentity(),
+                    cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

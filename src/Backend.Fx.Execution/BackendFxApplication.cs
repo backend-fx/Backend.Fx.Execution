@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Backend.Fx.Execution.DependencyInjection;
 using Backend.Fx.Execution.Features;
 using Backend.Fx.Execution.Pipeline;
+using Backend.Fx.Execution.Pipeline.Commands;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
 using JetBrains.Annotations;
@@ -38,9 +39,11 @@ namespace Backend.Fx.Execution
                 string.Join(", ", assemblies.Select(ass => ass.GetName().Name)));
 
             var invoker = new BackendFxApplicationInvoker(this);
-
             Invoker = new ExceptionLoggingInvoker(exceptionLogger, invoker);
 
+            var commandExecutor = new CommandExecutor(invoker);
+            CommandExecutor = new ExceptionLoggingCommandExecutor(exceptionLogger, commandExecutor);
+            
             CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
             ExceptionLogger = exceptionLogger;
             Assemblies = assemblies;
@@ -65,6 +68,8 @@ namespace Backend.Fx.Execution
         public Assembly[] Assemblies { get; }
 
         public IBackendFxApplicationInvoker Invoker { get; }
+        
+        public IBackendFxApplicationCommandExecutor CommandExecutor { get; }
 
         public ICompositionRoot CompositionRoot { get; }
 

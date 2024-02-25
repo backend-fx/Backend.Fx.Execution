@@ -3,10 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Backend.Fx.Execution.Commands;
+namespace Backend.Fx.Execution.Pipeline.Commands;
 
 [PublicAPI]
 public interface IAuthorizedCommand
 {
-    Func<IServiceProvider, CancellationToken, Task<bool>> AsyncAuthorization { get; }
+    Func<IServiceProvider, CancellationToken, Task> AuthorizeAsync { get; }
 }

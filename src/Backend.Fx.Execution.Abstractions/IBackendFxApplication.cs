@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Backend.Fx.Execution.DependencyInjection;
 using Backend.Fx.Execution.Features;
+using Backend.Fx.Execution.Pipeline;
+using Backend.Fx.Execution.Pipeline.Commands;
 using Backend.Fx.Logging;
 using JetBrains.Annotations;
 
@@ -19,6 +21,11 @@ public interface IBackendFxApplication : IDisposable
     /// The invoker runs a given action asynchronously in an application scope with injection facilities 
     /// </summary>
     IBackendFxApplicationInvoker Invoker { get; }
+    
+    /// <summary>
+    /// The command executor runs a given command asynchronously in an application scope with injection facilities 
+    /// </summary>
+    IBackendFxApplicationCommandExecutor CommandExecutor { get; }
 
     /// <summary>
     /// The composition root of the dependency injection framework
