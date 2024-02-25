@@ -2,7 +2,7 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using Backend.Fx.Execution.Pipeline;
+using Backend.Fx.Execution.Commands;
 using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution;
@@ -28,4 +28,11 @@ public interface IBackendFxApplicationInvoker
     /// should return a result, it should be made available as a property on the command itself
     /// </summary>
     Task Execute(ICommand command);
+    
+    /// <summary>
+    /// Execute an invoker command through the full execution pipeline, giving the command full control over the
+    /// injection scope handling. If the command should return a result, it should be made available as a property
+    /// on the command itself
+    /// </summary>
+    Task Execute(IInvokerCommand command);
 }

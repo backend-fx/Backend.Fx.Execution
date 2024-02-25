@@ -2,6 +2,7 @@ using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+using Backend.Fx.Execution.Commands;
 using Backend.Fx.Logging;
 
 namespace Backend.Fx.Execution.Pipeline
@@ -34,6 +35,19 @@ namespace Backend.Fx.Execution.Pipeline
         }
         
         public async Task Execute(ICommand command)
+        {
+            try
+            {
+                await _invoker.Execute(command).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _exceptionLogger.LogException(ex);
+                throw;
+            }
+        }
+
+        public async Task Execute(IInvokerCommand command)
         {
             try
             {
