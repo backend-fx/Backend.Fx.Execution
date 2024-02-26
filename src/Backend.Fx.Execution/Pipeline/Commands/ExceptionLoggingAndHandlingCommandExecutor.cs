@@ -24,7 +24,7 @@ namespace Backend.Fx.Execution.Pipeline.Commands
         {
             try
             {
-                await _executor.Execute(command).ConfigureAwait(false);
+                await _executor.Execute(command, identity, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -39,7 +39,7 @@ namespace Backend.Fx.Execution.Pipeline.Commands
         {
             try
             {
-                await _executor.Execute(command).ConfigureAwait(false);
+                await _executor.Execute(command, identity, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

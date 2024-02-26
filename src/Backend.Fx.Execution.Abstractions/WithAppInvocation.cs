@@ -9,13 +9,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Backend.Fx.Execution;
 
 [PublicAPI]
-public class WithInvocation<TService> where TService : class
+public class WithAppInvocation<TService> where TService : class
 {
-    private readonly IBackendFxApplicationInvoker _invoker;
+    private readonly IBackendFxApplication _application;
 
-    public WithInvocation(IBackendFxApplicationInvoker invoker)
+    public WithAppInvocation(IBackendFxApplication application)
     {
-        _invoker = invoker;
+        _application = application;
     }
     
     /// <summary>
@@ -26,7 +26,7 @@ public class WithInvocation<TService> where TService : class
         IIdentity identity = null)
     {
         identity ??= new AnonymousIdentity();
-        return _invoker.InvokeAsync(
+        return _application.Invoker.InvokeAsync(
             (sp, _) => asyncAction(sp.GetRequiredService<TService>()),
             identity);
     }
@@ -41,7 +41,7 @@ public class WithInvocation<TService> where TService : class
         CancellationToken cancellationToken = default)
     {
         identity ??= new AnonymousIdentity();
-        return _invoker.InvokeAsync(
+        return _application.Invoker.InvokeAsync(
             (sp, ct) => asyncAction(sp.GetRequiredService<TService>(), ct),
             identity, cancellationToken);
     }
@@ -55,7 +55,7 @@ public class WithInvocation<TService> where TService : class
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
-        await _invoker.InvokeAsync(
+        await _application.Invoker.InvokeAsync(
             async (sp, _) => result = await func(sp.GetRequiredService<TService>()),
             identity);
         return result;
@@ -71,7 +71,7 @@ public class WithInvocation<TService> where TService : class
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
-        await _invoker.InvokeAsync(
+        await _application.Invoker.InvokeAsync(
             async (sp, ct) => result = await func(sp.GetRequiredService<TService>(), ct),
             identity, 
             cancellationToken);
@@ -87,7 +87,7 @@ public class WithInvocation<TService> where TService : class
     public void Do(Action<TService> action, IIdentity identity = null)
     {
         identity ??= new AnonymousIdentity();
-        _invoker.InvokeAsync(
+        _application.Invoker.InvokeAsync(
             (sp, _) =>
             {
                 action(sp.GetRequiredService<TService>());
@@ -105,7 +105,7 @@ public class WithInvocation<TService> where TService : class
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
-        _invoker.InvokeAsync(
+        _application.Invoker.InvokeAsync(
             (sp, _) =>
             {
                 result = func(sp.GetRequiredService<TService>());

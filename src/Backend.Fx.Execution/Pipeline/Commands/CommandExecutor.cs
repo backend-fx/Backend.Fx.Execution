@@ -43,7 +43,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
             await _invoker.InvokeAsync(async (sp, ct) =>
             {
                 await authorizedCommand.AuthorizeAsync(sp, ct).ConfigureAwait(false);
-            });
+            }, cancellationToken: cancellationToken);
         }
 
         await command.AsyncInvocation.Invoke(
