@@ -17,8 +17,10 @@ namespace Backend.Fx.Execution.Pipeline
             _invoker = invoker;
         }
 
-        public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity identity, CancellationToken cancellationToken = default)
+        public async Task InvokeAsync(
+            Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
+            IIdentity identity, 
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -29,8 +31,5 @@ namespace Backend.Fx.Execution.Pipeline
                 _exceptionLogger.LogException(ex);
             }
         }
-        
-        public Task InvokeAsync(Func<IServiceProvider, Task> awaitableAsyncAction, IIdentity identity = null)
-            => InvokeAsync((sp, _) => awaitableAsyncAction.Invoke(sp), identity);
     }
 }

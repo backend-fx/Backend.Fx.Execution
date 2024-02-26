@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Backend.Fx.Execution;
+namespace Backend.Fx.Execution.Pipeline;
 
 [PublicAPI]
 public interface IBackendFxApplicationInvoker
