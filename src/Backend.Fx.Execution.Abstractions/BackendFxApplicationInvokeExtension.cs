@@ -65,9 +65,15 @@ public static class BackendFxApplicationInvokeExtension
         return result;
     }
 
-    public static WithInvocation<TService> With<TService>(this IBackendFxApplication application)
+    public static WithInvocation<TService> With<TService>(this IBackendFxApplicationInvoker invoker)
         where TService : class
     {
-        return new WithInvocation<TService>(application);
+        return new WithInvocation<TService>(invoker);
+    }
+    
+    public static WithAppInvocation<TService> With<TService>(this IBackendFxApplication application)
+        where TService : class
+    {
+        return new WithAppInvocation<TService>(application);
     }
 }
