@@ -25,14 +25,12 @@ namespace Backend.Fx.Execution.Pipeline
             CancellationToken cancellationToken = default,
             bool allowInvocationDuringBoot = false)
         {
-            if (allowInvocationDuringBoot)
-            {
-                await AssertVerifiedApplicationAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
+            if (!allowInvocationDuringBoot)
             {
                 await AssertBootedApplicationAsync(cancellationToken).ConfigureAwait(false);
             }
+            
+            AssertFunctionalApplication();
 
             identity ??= new AnonymousIdentity();
             _logger.LogInformation("Invoking action as {Identity}", identity.Name);
@@ -76,35 +74,24 @@ namespace Backend.Fx.Execution.Pipeline
             }
         }
 
-        private async Task AssertVerifiedApplicationAsync(CancellationToken cancellationToken)
+        private void AssertFunctionalApplication()
         {
-            if (_application.State is BackendFxApplicationState.Initializing)
-            {
-                _logger.LogInformation("Waiting for application to finish boot process");
-                await _application.WaitForBootAsync(cancellationToken).ConfigureAwait(false);
-            }
-
             if (_application.State == BackendFxApplicationState.BootFailed)
             {
                 throw new InvalidOperationException("The application failed to start. Cannot execute invocations.");
             }
         }
-
+        
         private async Task AssertBootedApplicationAsync(CancellationToken cancellationToken)
         {
-            if (_application.State is BackendFxApplicationState.Initializing
-                or BackendFxApplicationState.Verified
-                or BackendFxApplicationState.Booting)
+            if (_application.State is BackendFxApplicationState.Initializing or BackendFxApplicationState.Booting)
             {
                 _logger.LogInformation("Waiting for application to finish boot process");
                 await _application.WaitForBootAsync(cancellationToken).ConfigureAwait(false);
             }
-
-            if (_application.State == BackendFxApplicationState.BootFailed)
-            {
-                throw new InvalidOperationException("The application failed to start. Cannot execute invocations.");
-            }
         }
+        
+        
 
         private IServiceScope BeginScope([CanBeNull] IIdentity identity)
         {
