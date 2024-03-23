@@ -19,12 +19,15 @@ namespace Backend.Fx.Execution.Pipeline
 
         public async Task InvokeAsync(
             Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity identity, 
-            CancellationToken cancellationToken = default)
+            IIdentity identity,
+            CancellationToken cancellationToken = default, 
+            bool allowInvocationDuringBoot = false)
         {
             try
             {
-                await _invoker.InvokeAsync(awaitableAsyncAction, identity, cancellationToken).ConfigureAwait(false);
+                await _invoker
+                    .InvokeAsync(awaitableAsyncAction, identity, cancellationToken, allowInvocationDuringBoot)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {

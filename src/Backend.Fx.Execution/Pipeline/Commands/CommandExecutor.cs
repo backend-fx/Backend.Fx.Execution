@@ -30,7 +30,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
                 await command.AsyncInvocation.Invoke(sp, ct).ConfigureAwait(false);
             },
             identity ?? new AnonymousIdentity(),
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task Execute(
@@ -43,7 +43,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
             await _invoker.InvokeAsync(async (sp, ct) =>
             {
                 await authorizedCommand.AuthorizeAsync(sp, ct).ConfigureAwait(false);
-            }, cancellationToken: cancellationToken);
+            }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         await command.AsyncInvocation.Invoke(

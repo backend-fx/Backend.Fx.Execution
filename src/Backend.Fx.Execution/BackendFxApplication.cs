@@ -57,6 +57,7 @@ namespace Backend.Fx.Execution
                 try
                 {
                     CompositionRoot.Verify();
+                    State = BackendFxApplicationState.Verified;
 
                     foreach (Feature feature in _features)
                     {
