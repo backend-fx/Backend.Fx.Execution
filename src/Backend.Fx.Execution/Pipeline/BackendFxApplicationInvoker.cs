@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +23,8 @@ namespace Backend.Fx.Execution.Pipeline
         public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
             IIdentity identity = null, CancellationToken cancellationToken = default)
         {
+            await AssertBootedApplicationAsync(cancellationToken).ConfigureAwait(false);
+            
             identity ??= new AnonymousIdentity();
             _logger.LogInformation("Invoking action as {Identity}", identity.Name);
             using IServiceScope serviceScope = BeginScope(identity);
@@ -29,16 +32,31 @@ namespace Backend.Fx.Execution.Pipeline
             var operation = serviceScope.ServiceProvider.GetRequiredService<IOperation>();
             try
             {
-                await operation.BeginAsync(serviceScope, cancellationToken).ConfigureAwait(false);
-                await awaitableAsyncAction.Invoke(serviceScope.ServiceProvider, cancellationToken)
+                _logger.LogTrace("Starting operation");
+                await operation
+                    .BeginAsync(serviceScope, cancellationToken)
                     .ConfigureAwait(false);
-                await operation.CompleteAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogTrace("operation started");
+                
+                _logger.LogTrace("Invoking action");
+                await awaitableAsyncAction
+                    .Invoke(serviceScope.ServiceProvider, cancellationToken)
+                    .ConfigureAwait(false);
+                _logger.LogTrace("Action invoked");
+                
+                _logger.LogTrace("Completing operation");
+                await operation
+                    .CompleteAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                _logger.LogTrace("Operation completed");
             }
             catch
             {
                 try
                 {
+                    _logger.LogTrace("Canceling operation");
                     await operation.CancelAsync(cancellationToken).ConfigureAwait(false);
+                    _logger.LogTrace("Operation canceled");
                 }
                 catch (Exception ex)
                 {
@@ -49,11 +67,27 @@ namespace Backend.Fx.Execution.Pipeline
             }
         }
 
-        private IServiceScope BeginScope(IIdentity identity)
+        private async Task AssertBootedApplicationAsync(CancellationToken cancellationToken)
         {
+            if (_application.State is BackendFxApplicationState.Initializing or BackendFxApplicationState.Booting)
+            {
+                _logger.LogInformation("Waiting for application to finish boot process");
+                await _application.WaitForBootAsync(cancellationToken).ConfigureAwait(false);
+            }
+        
+            if (_application.State == BackendFxApplicationState.BootFailed)
+            {
+                throw new InvalidOperationException("The application failed to start. Cannot execute invocations.");
+            }
+        }
+
+        private IServiceScope BeginScope([CanBeNull] IIdentity identity)
+        {
+            identity ??= new AnonymousIdentity();
+
+            _logger.LogTrace("Beginning scope for {Identity}", identity.Name);
             IServiceScope serviceScope = _application.CompositionRoot.BeginScope();
 
-            identity ??= new AnonymousIdentity();
             serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().ReplaceCurrent(identity);
 
             return serviceScope;
