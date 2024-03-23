@@ -38,6 +38,8 @@ public interface IBackendFxApplication : IDisposable
     IExceptionLogger ExceptionLogger { get; }
 
     Assembly[] Assemblies { get; }
+    
+    BackendFxApplicationState State { get; }
 
     /// <summary>
     /// allows synchronously awaiting application startup

@@ -51,16 +51,29 @@ namespace Backend.Fx.Execution
 
             _bootAction = new Lazy<Task>(async () =>
             {
+                State = BackendFxApplicationState.Booting;
                 _logger.LogInformation("Booting application");
-                CompositionRoot.Verify();
 
-                foreach (Feature feature in _features)
+                try
                 {
-                    // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
-                    if (feature is IBootableFeature bootableFeature)
+                    CompositionRoot.Verify();
+
+                    foreach (Feature feature in _features)
                     {
-                        await bootableFeature.BootAsync(this).ConfigureAwait(false);
+                        // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
+                        if (feature is IBootableFeature bootableFeature)
+                        {
+                            await bootableFeature.BootAsync(this).ConfigureAwait(false);
+                        }
                     }
+                    
+                    State = BackendFxApplicationState.Booted;
+                }
+                catch (Exception ex)
+                {
+                    State = BackendFxApplicationState.BootFailed;
+                    _logger.LogCritical(ex, "Boot failed!");
+                    throw;
                 }
             });
         }
@@ -74,6 +87,8 @@ namespace Backend.Fx.Execution
         public ICompositionRoot CompositionRoot { get; }
 
         public IExceptionLogger ExceptionLogger { get; }
+
+        public BackendFxApplicationState State { get; set; } = BackendFxApplicationState.Initializing;
 
         public virtual void EnableFeature(Feature feature)
         {
