@@ -16,11 +16,9 @@ public interface IBackendFxApplicationInvoker
     /// <param name="identity">The acting identity</param>
     /// <param name="cancellationToken">Pass an existing cancellation token (e.g. HttpContext.RequestAborted) to
     ///     enable cancellation of the async invocation.</param>
-    /// <param name="allowInvocationDuringBoot"></param>
     /// <returns>The <see cref="Task"/> representing the async invocation.</returns>
     Task InvokeAsync(
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, 
         IIdentity identity = null, 
-        CancellationToken cancellationToken = default,
-        bool allowInvocationDuringBoot = false);
+        CancellationToken cancellationToken = default);
 }

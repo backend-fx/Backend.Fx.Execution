@@ -18,12 +18,12 @@ namespace Backend.Fx.Execution;
 public interface IBackendFxApplication : IDisposable
 {
     /// <summary>
-    /// The invoker runs a given action asynchronously in an application scope with injection facilities 
+    /// The invoker runs a given action asynchronously in an application scope with injection facilities
     /// </summary>
     IBackendFxApplicationInvoker Invoker { get; }
-    
+
     /// <summary>
-    /// The command executor runs a given command asynchronously in an application scope with injection facilities 
+    /// The command executor runs a given command asynchronously in an application scope with injection facilities
     /// </summary>
     IBackendFxApplicationCommandExecutor CommandExecutor { get; }
 
@@ -38,7 +38,7 @@ public interface IBackendFxApplication : IDisposable
     IExceptionLogger ExceptionLogger { get; }
 
     Assembly[] Assemblies { get; }
-    
+
     BackendFxApplicationState State { get; }
 
     /// <summary>
@@ -59,4 +59,6 @@ public interface IBackendFxApplication : IDisposable
     void EnableFeature(Feature feature);
 
     void RequireDependantFeature<TFeature>() where TFeature : Feature;
+
+    IDisposable UseSingleUserMode();
 }
