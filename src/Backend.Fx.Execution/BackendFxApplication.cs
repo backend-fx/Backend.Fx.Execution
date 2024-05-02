@@ -18,6 +18,7 @@ namespace Backend.Fx.Execution
     [PublicAPI]
     public class BackendFxApplication : IBackendFxApplication
     {
+        private readonly BackendFxApplicationStateMachine _stateMachine = new();
         private readonly ILogger _logger = Log.Create<BackendFxApplication>();
         private readonly List<Feature> _features = new();
         private readonly Lazy<Task> _bootAction;
@@ -43,7 +44,7 @@ namespace Backend.Fx.Execution
 
             var commandExecutor = new CommandExecutor(invoker);
             CommandExecutor = new ExceptionLoggingCommandExecutor(exceptionLogger, commandExecutor);
-            
+
             CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
             ExceptionLogger = exceptionLogger;
             Assemblies = assemblies;
@@ -51,12 +52,13 @@ namespace Backend.Fx.Execution
 
             _bootAction = new Lazy<Task>(async () =>
             {
-                State = BackendFxApplicationState.Booting;
                 _logger.LogInformation("Booting application");
 
                 try
                 {
                     CompositionRoot.Verify();
+
+                    _stateMachine.EnterSingeUserMode();
 
                     foreach (Feature feature in _features)
                     {
@@ -66,12 +68,12 @@ namespace Backend.Fx.Execution
                             await bootableFeature.BootAsync(this).ConfigureAwait(false);
                         }
                     }
-                    
-                    State = BackendFxApplicationState.Booted;
+
+                    _stateMachine.EnterMultiUserMode();
                 }
                 catch (Exception ex)
                 {
-                    State = BackendFxApplicationState.BootFailed;
+                    _stateMachine.EnterCrashed();
                     _logger.LogCritical(ex, "Boot failed!");
                     throw;
                 }
@@ -81,14 +83,14 @@ namespace Backend.Fx.Execution
         public Assembly[] Assemblies { get; }
 
         public IBackendFxApplicationInvoker Invoker { get; }
-        
+
         public IBackendFxApplicationCommandExecutor CommandExecutor { get; }
 
         public ICompositionRoot CompositionRoot { get; }
 
         public IExceptionLogger ExceptionLogger { get; }
 
-        public BackendFxApplicationState State { get; set; } = BackendFxApplicationState.Initializing;
+        public BackendFxApplicationState State => _stateMachine.State;
 
         public virtual void EnableFeature(Feature feature)
         {

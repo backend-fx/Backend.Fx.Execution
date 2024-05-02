@@ -22,17 +22,12 @@ namespace Backend.Fx.Execution.Pipeline
 
         public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
             IIdentity identity = null,
-            CancellationToken cancellationToken = default,
-            bool allowInvocationDuringBoot = false)
+            CancellationToken cancellationToken = default)
         {
-            if (!allowInvocationDuringBoot)
-            {
-                await AssertBootedApplicationAsync(cancellationToken).ConfigureAwait(false);
-            }
-            
-            AssertFunctionalApplication();
-
             identity ??= new AnonymousIdentity();
+
+            await AssertCorrectUserModeAsync(identity, cancellationToken).ConfigureAwait(false);
+
             _logger.LogInformation("Invoking action as {Identity}", identity.Name);
             using IServiceScope serviceScope = BeginScope(identity);
             using IDisposable durationLogger = UseDurationLogger(serviceScope);
@@ -74,24 +69,29 @@ namespace Backend.Fx.Execution.Pipeline
             }
         }
 
-        private void AssertFunctionalApplication()
+        private async Task AssertCorrectUserModeAsync(IIdentity identity, CancellationToken cancellationToken)
         {
-            if (_application.State == BackendFxApplicationState.BootFailed)
+            // SystemIdentity is allowed to run in SingleUserMode, too
+            if (identity is SystemIdentity && _application.State is BackendFxApplicationState.SingleUserMode)
+            {
+                return;
+            }
+
+            // all other users must wait for MultiUserMode
+            if (_application.State is BackendFxApplicationState.Halted or BackendFxApplicationState.SingleUserMode)
+            {
+                _logger.LogInformation("Waiting for multi user mode");
+                await _application.WaitForBootAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // the application must not be crashed at this point
+            if (_application.State == BackendFxApplicationState.Crashed)
             {
                 throw new InvalidOperationException("The application failed to start. Cannot execute invocations.");
             }
         }
-        
-        private async Task AssertBootedApplicationAsync(CancellationToken cancellationToken)
-        {
-            if (_application.State is BackendFxApplicationState.Initializing or BackendFxApplicationState.Booting)
-            {
-                _logger.LogInformation("Waiting for application to finish boot process");
-                await _application.WaitForBootAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        
-        
+
+
 
         private IServiceScope BeginScope([CanBeNull] IIdentity identity)
         {
