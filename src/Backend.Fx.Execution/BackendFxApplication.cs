@@ -114,6 +114,11 @@ namespace Backend.Fx.Execution
 
         public IDisposable UseSingleUserMode()
         {
+            if (State == BackendFxApplicationState.SingleUserMode)
+            {
+                return new DelegateDisposable(() => { });
+            }
+
             _stateMachine.EnterSingeUserMode();
             return new DelegateDisposable(() => _stateMachine.EnterMultiUserMode());
         }
