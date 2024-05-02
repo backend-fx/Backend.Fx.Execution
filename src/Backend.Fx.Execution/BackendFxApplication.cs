@@ -112,6 +112,12 @@ namespace Backend.Fx.Execution
             }
         }
 
+        public IDisposable UseSingleUserMode()
+        {
+            _stateMachine.EnterSingeUserMode();
+            return new DelegateDisposable(() => _stateMachine.EnterMultiUserMode());
+        }
+
         public async Task BootAsync(CancellationToken cancellationToken = default)
         {
             await _bootAction.Value.ConfigureAwait(false);
