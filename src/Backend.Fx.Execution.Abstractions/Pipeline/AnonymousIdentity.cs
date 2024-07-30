@@ -1,10 +1,11 @@
-﻿using System.Security.Principal;
+﻿using System;
+using System.Security.Principal;
 using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution.Pipeline
 {
     [PublicAPI]
-    public readonly struct AnonymousIdentity : IIdentity
+    public readonly struct AnonymousIdentity : IIdentity, IEquatable<IIdentity>
     {
         public string Name => "ANONYMOUS";
 
@@ -12,9 +13,9 @@ namespace Backend.Fx.Execution.Pipeline
 
         public bool IsAuthenticated => false;
         
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            return obj is AnonymousIdentity;
+            return other is AnonymousIdentity;
         }
 
         public override int GetHashCode()
@@ -22,9 +23,9 @@ namespace Backend.Fx.Execution.Pipeline
             return 1564925492;
         }
 
-        public bool Equals(AnonymousIdentity other)
+        public bool Equals(IIdentity other)
         {
-            return true;
+            return other is AnonymousIdentity;
         }
     }
 }

@@ -21,5 +21,21 @@ namespace Backend.Fx.Execution.Pipeline
             Id = correlationId;
             _logger.LogInformation("Resuming correlation {Correlation}", Id);
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Correlation);
+        }
+
+        private bool Equals(Correlation other)
+        {
+            return Id.Equals(other?.Id);
+        }
+
+        public override int GetHashCode()
+        {
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
+            return Id.GetHashCode();
+        }
     }
 }
