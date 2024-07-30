@@ -1,10 +1,11 @@
-﻿using System.Security.Principal;
+﻿using System;
+using System.Security.Principal;
 using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution.Pipeline
 {
     [PublicAPI]
-    public readonly struct SystemIdentity : IIdentity
+    public readonly struct SystemIdentity : IIdentity, IEquatable<SystemIdentity>
     {
         public string Name => "SYSTEM";
 
@@ -12,9 +13,9 @@ namespace Backend.Fx.Execution.Pipeline
 
         public bool IsAuthenticated => true;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            return obj is SystemIdentity;
+            return other is SystemIdentity;
         }
 
         public override int GetHashCode()
