@@ -4,36 +4,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using Backend.Fx.Logging;
 
-namespace Backend.Fx.Execution.Pipeline
+namespace Backend.Fx.Execution.Pipeline;
+
+internal class ExceptionLoggingInvoker : IBackendFxApplicationInvoker
 {
-    internal class ExceptionLoggingInvoker : IBackendFxApplicationInvoker
+    private readonly IExceptionLogger _exceptionLogger;
+    private readonly IBackendFxApplicationInvoker _invoker;
+
+    public ExceptionLoggingInvoker(IExceptionLogger exceptionLogger, IBackendFxApplicationInvoker invoker)
     {
-        private readonly IExceptionLogger _exceptionLogger;
-        private readonly IBackendFxApplicationInvoker _invoker;
+        _exceptionLogger = exceptionLogger;
+        _invoker = invoker;
+    }
 
-        public ExceptionLoggingInvoker(IExceptionLogger exceptionLogger, IBackendFxApplicationInvoker invoker)
+    public async Task InvokeAsync(
+        Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
+        IIdentity identity = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
         {
-            _exceptionLogger = exceptionLogger;
-            _invoker = invoker;
+            await _invoker.InvokeAsync(
+                awaitableAsyncAction,
+                identity ?? new AnonymousIdentity(),
+                cancellationToken).ConfigureAwait(false);
         }
-
-        public async Task InvokeAsync(
-            Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity identity = null,
-            CancellationToken cancellationToken = default)
+        catch (Exception ex)
         {
-            try
-            {
-                await _invoker.InvokeAsync(
-                    awaitableAsyncAction,
-                    identity ?? new AnonymousIdentity(),
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _exceptionLogger.LogException(ex);
-                throw;
-            }
+            _exceptionLogger.LogException(ex);
+            throw;
         }
     }
 }

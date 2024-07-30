@@ -4,39 +4,38 @@ using Backend.Fx.Util;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 
-namespace Backend.Fx.Execution.Pipeline
+namespace Backend.Fx.Execution.Pipeline;
+
+internal class ExecutionPipelineModule : IModule
 {
-    internal class ExecutionPipelineModule : IModule
+    private readonly bool _withFrozenClockDuringExecution;
+
+    public ExecutionPipelineModule(bool withFrozenClockDuringExecution = true)
     {
-        private readonly bool _withFrozenClockDuringExecution;
+        _withFrozenClockDuringExecution = withFrozenClockDuringExecution;
+    }
 
-        public ExecutionPipelineModule(bool withFrozenClockDuringExecution = true)
+    public void Register(ICompositionRoot compositionRoot)
+    {
+        compositionRoot.Register(
+            ServiceDescriptor.Singleton<IClock>(_ => SystemClock.Instance));
+
+        if (_withFrozenClockDuringExecution)
         {
-            _withFrozenClockDuringExecution = withFrozenClockDuringExecution;
+            compositionRoot.RegisterDecorator(
+                ServiceDescriptor.Scoped<IClock, FrozenClock>());
         }
 
-        public void Register(ICompositionRoot compositionRoot)
-        {
-            compositionRoot.Register(
-                ServiceDescriptor.Singleton<IClock>(_ => SystemClock.Instance));
-
-            if (_withFrozenClockDuringExecution)
-            {
-                compositionRoot.RegisterDecorator(
-                    ServiceDescriptor.Scoped<IClock, FrozenClock>());
-            }
-
-            compositionRoot.Register(
-                ServiceDescriptor.Singleton<Counter, Counter>());
+        compositionRoot.Register(
+            ServiceDescriptor.Singleton<Counter, Counter>());
             
-            compositionRoot.Register(
-                ServiceDescriptor.Scoped<IOperation, Operation>());
+        compositionRoot.Register(
+            ServiceDescriptor.Scoped<IOperation, Operation>());
 
-            compositionRoot.Register(
-                ServiceDescriptor.Scoped<ICurrentTHolder<IIdentity>, CurrentIdentityHolder>());
+        compositionRoot.Register(
+            ServiceDescriptor.Scoped<ICurrentTHolder<IIdentity>, CurrentIdentityHolder>());
             
-            compositionRoot.Register(
-                ServiceDescriptor.Scoped<ICurrentTHolder<Correlation>, CurrentCorrelationHolder>());
-        }
+        compositionRoot.Register(
+            ServiceDescriptor.Scoped<ICurrentTHolder<Correlation>, CurrentCorrelationHolder>());
     }
 }

@@ -7,63 +7,62 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Backend.Fx.Execution
+namespace Backend.Fx.Execution;
+
+[PublicAPI]
+public interface IBackendFxApplicationHostedService<out TApplication> : IHostedService
+    where TApplication : IBackendFxApplication
 {
-    [PublicAPI]
-    public interface IBackendFxApplicationHostedService<out TApplication> : IHostedService
-        where TApplication : IBackendFxApplication
+    TApplication Application { get; }
+}
+
+public abstract class
+    BackendFxApplicationHostedService<TApplication> : IBackendFxApplicationHostedService<TApplication>
+    where TApplication : IBackendFxApplication
+{
+    private static readonly ILogger Logger = Log.Create<BackendFxApplicationHostedService<TApplication>>();
+
+    public abstract TApplication Application { get; }
+
+    public virtual async Task StartAsync(CancellationToken ct)
     {
-        TApplication Application { get; }
-    }
-
-    public abstract class
-        BackendFxApplicationHostedService<TApplication> : IBackendFxApplicationHostedService<TApplication>
-        where TApplication : IBackendFxApplication
-    {
-        private static readonly ILogger Logger = Log.Create<BackendFxApplicationHostedService<TApplication>>();
-
-        public abstract TApplication Application { get; }
-
-        public virtual async Task StartAsync(CancellationToken ct)
+        using (Logger.LogInformationDuration("Application starting..."))
         {
-            using (Logger.LogInformationDuration("Application starting..."))
+            try
             {
-                try
-                {
-                    await Application.BootAsync(ct);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogCritical(ex, "Application could not be started");
-                    throw;
-                }
+                await Application.BootAsync(ct);
             }
-        }
-
-        public virtual Task StopAsync(CancellationToken cancellationToken)
-        {
-            using (Logger.LogInformationDuration("Application stopping..."))
+            catch (Exception ex)
             {
-                Application.Dispose();
-                return Task.CompletedTask;
+                Logger.LogCritical(ex, "Application could not be started");
+                throw;
             }
         }
     }
 
-    [PublicAPI]
-    public static class BackendFxApplicationHostedServiceExtensions
+    public virtual Task StopAsync(CancellationToken cancellationToken)
     {
-        public static void AddBackendFxApplication<THostedService, TApplication>(this IServiceCollection services)
-            where THostedService : class, IBackendFxApplicationHostedService<TApplication>
-            where TApplication : class, IBackendFxApplication
+        using (Logger.LogInformationDuration("Application stopping..."))
         {
-            services.AddSingleton<THostedService>();
-
-            // this registration ensures starting of the hosted service
-            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<THostedService>());
-
-            // this registration makes the application instance available as singleton
-            services.AddSingleton(provider => provider.GetRequiredService<THostedService>().Application);
+            Application.Dispose();
+            return Task.CompletedTask;
         }
+    }
+}
+
+[PublicAPI]
+public static class BackendFxApplicationHostedServiceExtensions
+{
+    public static void AddBackendFxApplication<THostedService, TApplication>(this IServiceCollection services)
+        where THostedService : class, IBackendFxApplicationHostedService<TApplication>
+        where TApplication : class, IBackendFxApplication
+    {
+        services.AddSingleton<THostedService>();
+
+        // this registration ensures starting of the hosted service
+        services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<THostedService>());
+
+        // this registration makes the application instance available as singleton
+        services.AddSingleton(provider => provider.GetRequiredService<THostedService>().Application);
     }
 }

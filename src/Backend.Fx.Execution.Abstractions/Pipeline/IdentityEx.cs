@@ -1,17 +1,16 @@
 using System.Security.Principal;
 
-namespace Backend.Fx.Execution.Pipeline
+namespace Backend.Fx.Execution.Pipeline;
+
+public static class IdentityEx
 {
-    public static class IdentityEx
+    public static bool IsAnonymous(this IIdentity identity)
     {
-        public static bool IsAnonymous(this IIdentity identity)
-        {
-            return identity is AnonymousIdentity;
-        }
+        return identity is AnonymousIdentity;
+    }
         
-        public static bool IsSystem(this IIdentity identity)
-        {
-            return identity is SystemIdentity;
-        }
+    public static bool IsSystem(this IIdentity identity)
+    {
+        return identity is SystemIdentity;
     }
 }
