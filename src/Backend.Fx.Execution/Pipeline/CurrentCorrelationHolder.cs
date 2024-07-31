@@ -1,19 +1,18 @@
 using Backend.Fx.Util;
 using JetBrains.Annotations;
 
-namespace Backend.Fx.Execution.Pipeline
-{
-    [PublicAPI]
-    public sealed class CurrentCorrelationHolder : CurrentTHolder<Correlation>
-    {
-        public override Correlation ProvideInstance()
-        {
-            return new Correlation();
-        }
+namespace Backend.Fx.Execution.Pipeline;
 
-        protected override string Describe(Correlation instance)
-        {
-            return $"Correlation: {instance?.Id.ToString() ?? "NULL"}";
-        }
+[PublicAPI]
+public sealed class CurrentCorrelationHolder : CurrentTHolder<Correlation>
+{
+    public override Correlation ProvideInstance()
+    {
+        return new Correlation();
+    }
+
+    protected override string Describe(Correlation instance)
+    {
+        return $"Correlation: {instance?.Id.ToString() ?? "NULL"}";
     }
 }

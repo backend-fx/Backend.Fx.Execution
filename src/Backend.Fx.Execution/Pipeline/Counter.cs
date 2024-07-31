@@ -1,14 +1,13 @@
 using System.Threading;
 
-namespace Backend.Fx.Execution.Pipeline
+namespace Backend.Fx.Execution.Pipeline;
+
+public class Counter
 {
-    public class Counter
-    {
-        private int _count;
+    private int _count;
         
-        public int Count()
-        {
-            return Interlocked.Increment(ref _count);
-        }
+    public int Count()
+    {
+        return Interlocked.Increment(ref _count);
     }
 }

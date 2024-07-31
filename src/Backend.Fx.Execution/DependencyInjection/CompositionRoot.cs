@@ -5,40 +5,39 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Backend.Fx.Execution.DependencyInjection
+namespace Backend.Fx.Execution.DependencyInjection;
+
+[PublicAPI]
+public abstract class CompositionRoot : ICompositionRoot
 {
-    [PublicAPI]
-    public abstract class CompositionRoot : ICompositionRoot
+    private readonly ILogger _logger = Log.Create<CompositionRoot>();
+
+    public abstract IServiceProvider ServiceProvider { get; }
+
+    public abstract void Verify();
+
+    public virtual void RegisterModules(params IModule[] modules)
     {
-        private readonly ILogger _logger = Log.Create<CompositionRoot>();
-
-        public abstract IServiceProvider ServiceProvider { get; }
-
-        public abstract void Verify();
-
-        public virtual void RegisterModules(params IModule[] modules)
+        foreach (IModule module in modules)
         {
-            foreach (IModule module in modules)
-            {
-                _logger.LogInformation("Registering {@Module}", module);
-                module.Register(this);
-            }
+            _logger.LogInformation("Registering {@Module}", module);
+            module.Register(this);
         }
+    }
 
-        public abstract void Register(ServiceDescriptor serviceDescriptor);
+    public abstract void Register(ServiceDescriptor serviceDescriptor);
 
-        public abstract void RegisterDecorator(ServiceDescriptor serviceDescriptor);
+    public abstract void RegisterDecorator(ServiceDescriptor serviceDescriptor);
 
-        public abstract void RegisterCollection(IEnumerable<ServiceDescriptor> serviceDescriptors);
+    public abstract void RegisterCollection(IEnumerable<ServiceDescriptor> serviceDescriptors);
 
-        public abstract IServiceScope BeginScope();
+    public abstract IServiceScope BeginScope();
 
-        protected abstract void Dispose(bool disposing);
+    protected abstract void Dispose(bool disposing);
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

@@ -1,27 +1,26 @@
 using System;
 using JetBrains.Annotations;
 
-namespace Backend.Fx.Execution.Features
+namespace Backend.Fx.Execution.Features;
+
+/// <summary>
+/// Base class for optional features that can be added to the Backend.Fx execution pipeline
+/// </summary>
+[PublicAPI]
+public abstract class Feature : IDisposable
 {
-    /// <summary>
-    /// Base class for optional features that can be added to the Backend.Fx execution pipeline
-    /// </summary>
-    [PublicAPI]
-    public abstract class Feature : IDisposable
+    public abstract void Enable(IBackendFxApplication application);
+
+    protected virtual void Dispose(bool disposing)
     {
-        public abstract void Enable(IBackendFxApplication application);
-
-        protected virtual void Dispose(bool disposing)
+        if (disposing)
         {
-            if (disposing)
-            {
-            }
         }
+    }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }
