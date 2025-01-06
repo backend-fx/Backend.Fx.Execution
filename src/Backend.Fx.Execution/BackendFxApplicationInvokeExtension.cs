@@ -16,7 +16,7 @@ public static class BackendFxApplicationInvokeExtension
     public static Task DoAsync(
         this IBackendFxApplication application,
         Func<IServiceProvider, Task> asyncAction,
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         return application.Invoker.InvokeAsync((sp, _) => asyncAction(sp), identity ?? new AnonymousIdentity());
     }
@@ -27,7 +27,7 @@ public static class BackendFxApplicationInvokeExtension
     public static Task DoAsync(
         this IBackendFxApplication application,
         Func<IServiceProvider, CancellationToken, Task> asyncAction,
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         return application.Invoker.InvokeAsync(asyncAction, identity ?? new AnonymousIdentity(), cancellationToken);
@@ -39,7 +39,7 @@ public static class BackendFxApplicationInvokeExtension
     public static async Task<TResult> DoAsync<TResult>(
         this IBackendFxApplication application,
         Func<IServiceProvider, Task<TResult>> asyncFunction,
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         TResult result = default!;
         await application.Invoker.InvokeAsync(
@@ -54,7 +54,7 @@ public static class BackendFxApplicationInvokeExtension
     public static async Task<TResult> DoAsync<TResult>(
         this IBackendFxApplication application,
         Func<IServiceProvider, CancellationToken, Task<TResult>> asyncFunction,
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         TResult result = default!;

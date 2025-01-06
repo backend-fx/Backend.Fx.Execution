@@ -13,7 +13,7 @@ public interface IBackendFxApplicationCommandExecutor
     /// should return a result, it should be made available as a property on the command itself
     /// </summary>
     Task Execute(ICommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
@@ -22,6 +22,6 @@ public interface IBackendFxApplicationCommandExecutor
     /// on the command itself
     /// </summary>
     Task Execute(IInvokerCommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default);
 }

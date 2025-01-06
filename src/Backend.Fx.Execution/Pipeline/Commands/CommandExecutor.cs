@@ -16,7 +16,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
 
     public async Task Execute(
         ICommand command,
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         await _invoker.InvokeAsync(
@@ -35,7 +35,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
 
     public async Task Execute(
         IInvokerCommand command,
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         if (command is IAuthorizedCommand authorizedCommand)

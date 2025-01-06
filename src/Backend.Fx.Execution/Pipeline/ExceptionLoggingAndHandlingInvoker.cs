@@ -19,7 +19,7 @@ public class ExceptionLoggingAndHandlingInvoker : IBackendFxApplicationInvoker
 
     public async Task InvokeAsync(
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-        IIdentity identity,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         try

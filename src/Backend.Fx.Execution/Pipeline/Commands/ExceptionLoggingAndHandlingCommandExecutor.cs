@@ -19,7 +19,7 @@ public class ExceptionLoggingAndHandlingCommandExecutor : IBackendFxApplicationC
 
     public async Task Execute(
         ICommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default)
     {
         try
@@ -34,7 +34,7 @@ public class ExceptionLoggingAndHandlingCommandExecutor : IBackendFxApplicationC
 
     public async Task Execute(
         IInvokerCommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default)
     {
         try

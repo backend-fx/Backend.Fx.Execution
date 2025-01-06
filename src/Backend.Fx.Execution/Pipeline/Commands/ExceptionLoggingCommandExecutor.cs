@@ -19,7 +19,7 @@ internal class ExceptionLoggingCommandExecutor : IBackendFxApplicationCommandExe
         
     public async Task Execute(
         ICommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default)
     {
         try
@@ -38,7 +38,7 @@ internal class ExceptionLoggingCommandExecutor : IBackendFxApplicationCommandExe
 
     public async Task Execute(
         IInvokerCommand command,
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default)
     {
         try

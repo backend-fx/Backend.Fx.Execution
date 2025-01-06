@@ -9,11 +9,11 @@ public readonly struct AnonymousIdentity : IIdentity, IEquatable<IIdentity>
 {
     public string Name => "ANONYMOUS";
 
-    public string AuthenticationType => null;
+    public string AuthenticationType => string.Empty;
 
     public bool IsAuthenticated => false;
         
-    public override bool Equals(object other)
+    public override bool Equals(object? other)
     {
         return other is AnonymousIdentity;
     }
