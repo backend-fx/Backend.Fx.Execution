@@ -8,5 +8,5 @@ namespace Backend.Fx.Execution.Pipeline.Commands;
 [PublicAPI]
 public interface IInitializableCommand
 {
-    Func<IServiceProvider, CancellationToken, Task> InitializableAsync { get; }
+    Func<IServiceProvider, CancellationToken, Task> InitializeAsync { get; }
 }
