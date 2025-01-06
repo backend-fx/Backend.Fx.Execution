@@ -26,7 +26,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
                 // ReSharper disable once SuspiciousTypeConversion.Global
                 if (command is IInitializableCommand initializableCommand)
                 {
-                    await initializableCommand.InitializableAsync(sp, ct).ConfigureAwait(false);
+                    await initializableCommand.InitializeAsync(sp, ct).ConfigureAwait(false);
                 }
 
                 // ReSharper disable once SuspiciousTypeConversion.Global
@@ -54,7 +54,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
                 // ReSharper disable once SuspiciousTypeConversion.Global
                 if (command is IInitializableCommand initializableCommand)
                 {
-                    await initializableCommand.InitializableAsync(sp, ct).ConfigureAwait(false);
+                    await initializableCommand.InitializeAsync(sp, ct).ConfigureAwait(false);
                 }
 
                 await authorizedCommand.AuthorizeAsync(sp, ct).ConfigureAwait(false);
@@ -86,7 +86,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
             return _invoker.InvokeAsync(
                 (provider, token) =>
                 {
-                    _initializableCommand?.InitializableAsync(provider, token);
+                    _initializableCommand?.InitializeAsync(provider, token);
                     return awaitableAsyncAction(provider, token);
                 },
                 identity,
