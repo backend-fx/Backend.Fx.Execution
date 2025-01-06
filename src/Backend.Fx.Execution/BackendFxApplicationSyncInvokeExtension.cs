@@ -16,7 +16,7 @@ public static class BackendFxApplicationSyncInvokeExtension
     public static void Do(
         this IBackendFxApplication application,
         Action<IServiceProvider> action,
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         application.Invoker.InvokeAsync(
             (sp, _) =>
@@ -34,7 +34,7 @@ public static class BackendFxApplicationSyncInvokeExtension
     public static TResult Do<TResult>(
         this IBackendFxApplication application,
         Func<IServiceProvider, TResult> function,
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         TResult result = default!;
         application.Invoker.InvokeAsync(

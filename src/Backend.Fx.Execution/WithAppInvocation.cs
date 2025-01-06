@@ -23,7 +23,7 @@ public class WithAppInvocation<TService> where TService : class
     /// </summary>
     public Task DoAsync(
         Func<TService, Task> asyncAction, 
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
         return _application.Invoker.InvokeAsync(
@@ -37,7 +37,7 @@ public class WithAppInvocation<TService> where TService : class
     /// </summary>
     public Task DoAsync(
         Func<TService, CancellationToken, Task> asyncAction, 
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         identity ??= new AnonymousIdentity();
@@ -51,7 +51,7 @@ public class WithAppInvocation<TService> where TService : class
     /// </summary>
     public async Task<TResult> DoAsync<TResult>(
         Func<TService, Task<TResult>> func,
-        IIdentity identity = null)
+        IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
@@ -66,7 +66,7 @@ public class WithAppInvocation<TService> where TService : class
     /// </summary>
     public async Task<TResult> DoAsync<TResult>(
         Func<TService, CancellationToken, Task<TResult>> func,
-        IIdentity identity = null,
+        IIdentity? identity = null,
         CancellationToken cancellationToken = default)
     {
         identity ??= new AnonymousIdentity();
@@ -84,7 +84,7 @@ public class WithAppInvocation<TService> where TService : class
     ///     Invokes a synchronous action on <see cref="TService" />
     /// </summary>
     [Obsolete("Prefer async overload")]
-    public void Do(Action<TService> action, IIdentity identity = null)
+    public void Do(Action<TService> action, IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
         _application.Invoker.InvokeAsync(
@@ -100,7 +100,7 @@ public class WithAppInvocation<TService> where TService : class
     /// </summary>
     public TResult Do<TResult>(
         Func<TService, TResult> func,
-        IIdentity identity = null
+        IIdentity? identity = null
     )
     {
         identity ??= new AnonymousIdentity();

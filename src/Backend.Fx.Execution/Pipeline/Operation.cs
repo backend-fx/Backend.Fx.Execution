@@ -14,7 +14,7 @@ internal sealed class Operation : IOperation
     private readonly ILogger _logger = Log.Create<Operation>();
     private readonly int _instanceId;
     private bool? _isActive;
-    private IDisposable _lifetimeLogger;
+    private IDisposable? _lifetimeLogger;
 
     public Operation(Counter counter)
     {

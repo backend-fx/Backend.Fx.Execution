@@ -22,12 +22,12 @@ public sealed class Correlation
         _logger.LogInformation("Resuming correlation {Correlation}", Id);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as Correlation);
     }
 
-    private bool Equals(Correlation other)
+    private bool Equals(Correlation? other)
     {
         return Id.Equals(other?.Id);
     }

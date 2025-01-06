@@ -19,6 +19,6 @@ public interface IBackendFxApplicationInvoker
     /// <returns>The <see cref="Task"/> representing the async invocation.</returns>
     Task InvokeAsync(
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, 
-        IIdentity identity = null, 
+        IIdentity? identity = null, 
         CancellationToken cancellationToken = default);
 }

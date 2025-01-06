@@ -21,7 +21,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
     }
 
     public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-                                  IIdentity identity = null,
+                                  IIdentity? identity = null,
                                   CancellationToken cancellationToken = default)
     {
         identity ??= new AnonymousIdentity();
