@@ -5,5 +5,5 @@ public enum BackendFxApplicationState
     Halted,
     SingleUserMode,
     MultiUserMode,
-    Crashed,
+    Crashed
 }

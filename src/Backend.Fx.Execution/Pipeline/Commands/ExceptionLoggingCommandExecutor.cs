@@ -20,14 +20,11 @@ internal class ExceptionLoggingCommandExecutor : IBackendFxApplicationCommandExe
     public async Task Execute(
         ICommand command,
         IIdentity? identity = null, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         try
         {
-            await _executor.Execute(
-                command,
-                identity ?? new AnonymousIdentity(),
-                cancellationToken).ConfigureAwait(false);
+            await _executor.Execute(command, identity ?? new AnonymousIdentity(), cancellation).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -39,14 +36,11 @@ internal class ExceptionLoggingCommandExecutor : IBackendFxApplicationCommandExe
     public async Task Execute(
         IInvokerCommand command,
         IIdentity? identity = null, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         try
         {
-            await _executor.Execute(
-                command,
-                identity ?? new AnonymousIdentity(),
-                cancellationToken).ConfigureAwait(false);
+            await _executor.Execute(command, identity ?? new AnonymousIdentity(), cancellation).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

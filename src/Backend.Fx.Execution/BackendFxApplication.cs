@@ -20,7 +20,7 @@ public class BackendFxApplication : IBackendFxApplication
 {
     private readonly BackendFxApplicationStateMachine _stateMachine = new();
     private readonly ILogger _logger = Log.Create<BackendFxApplication>();
-    private readonly List<Feature> _features = new();
+    private readonly List<IFeature> _features = [];
     private readonly Lazy<Task> _bootAction;
 
     /// <summary>
@@ -30,9 +30,9 @@ public class BackendFxApplication : IBackendFxApplication
     /// <param name="exceptionLogger"></param>
     /// <param name="assemblies"></param>
     public BackendFxApplication(ICompositionRoot compositionRoot, IExceptionLogger exceptionLogger,
-                                params Assembly[] assemblies)
+        params Assembly[]? assemblies)
     {
-        assemblies ??= Array.Empty<Assembly>();
+        assemblies ??= [];
 
         _logger.LogInformation(
             "Initializing application with {CompositionRoot} providing services from [{Assemblies}]",
@@ -60,13 +60,10 @@ public class BackendFxApplication : IBackendFxApplication
 
                 _stateMachine.EnterSingeUserMode();
 
-                foreach (Feature feature in _features)
+                // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
+                foreach (var bootableFeature in _features.OfType<IBootableFeature>())
                 {
-                    // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
-                    if (feature is IBootableFeature bootableFeature)
-                    {
-                        await bootableFeature.BootAsync(this).ConfigureAwait(false);
-                    }
+                    await bootableFeature.BootAsync(this).ConfigureAwait(false);
                 }
 
                 _stateMachine.EnterMultiUserMode();
@@ -92,7 +89,7 @@ public class BackendFxApplication : IBackendFxApplication
 
     public BackendFxApplicationState State => _stateMachine.State;
 
-    public virtual void EnableFeature(Feature feature)
+    public virtual void EnableFeature(IFeature feature)
     {
         if (_bootAction.IsValueCreated)
         {
@@ -101,15 +98,6 @@ public class BackendFxApplication : IBackendFxApplication
 
         feature.Enable(this);
         _features.Add(feature);
-    }
-
-    public void RequireDependantFeature<TFeature>() where TFeature : Feature
-    {
-        if (!_features.OfType<TFeature>().Any())
-        {
-            throw new InvalidOperationException(
-                $"This feature requires the {typeof(TFeature).Name} to be enabled first");
-        }
     }
 
     public IDisposable UseSingleUserMode()
@@ -123,37 +111,38 @@ public class BackendFxApplication : IBackendFxApplication
         return new DelegateDisposable(() => _stateMachine.EnterMultiUserMode());
     }
 
-    public async Task BootAsync(CancellationToken cancellationToken = default)
+    public async Task BootAsync(CancellationToken cancellation = default)
     {
         await _bootAction.Value.ConfigureAwait(false);
     }
 
-    public async Task WaitForBootAsync(CancellationToken cancellationToken = default)
+    public async Task WaitForBootAsync(CancellationToken cancellation = default)
     {
         await Task.Run(async () =>
         {
             do
             {
-                if (cancellationToken.IsCancellationRequested ||
+                if (cancellation.IsCancellationRequested ||
                     _bootAction.IsValueCreated && _bootAction.Value.Status is TaskStatus.Canceled
                         or TaskStatus.Faulted or TaskStatus.RanToCompletion)
                 {
                     return;
                 }
 
-                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(50, cancellation).ConfigureAwait(false);
             } while (true);
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellation).ConfigureAwait(false);
     }
 
     public void Dispose()
     {
         _logger.LogInformation("Application shut down initialized");
-        foreach (Feature feature in _features)
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        foreach (var disposableFeature in _features.OfType<IDisposable>())
         {
-            feature.Dispose();
+            disposableFeature.Dispose();
         }
 
-        CompositionRoot?.Dispose();
+        CompositionRoot.Dispose();
     }
 }

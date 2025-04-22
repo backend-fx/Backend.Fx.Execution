@@ -14,7 +14,7 @@ public interface IBackendFxApplicationCommandExecutor
     /// </summary>
     Task Execute(ICommand command,
         IIdentity? identity = null, 
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellation = default);
     
     /// <summary>
     /// Execute an invoker command through the full execution pipeline, giving the command full control over the
@@ -23,5 +23,5 @@ public interface IBackendFxApplicationCommandExecutor
     /// </summary>
     Task Execute(IInvokerCommand command,
         IIdentity? identity = null, 
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellation = default);
 }

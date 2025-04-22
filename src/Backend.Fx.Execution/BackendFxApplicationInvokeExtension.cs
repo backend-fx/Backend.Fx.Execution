@@ -28,9 +28,9 @@ public static class BackendFxApplicationInvokeExtension
         this IBackendFxApplication application,
         Func<IServiceProvider, CancellationToken, Task> asyncAction,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
-        return application.Invoker.InvokeAsync(asyncAction, identity ?? new AnonymousIdentity(), cancellationToken);
+        return application.Invoker.InvokeAsync(asyncAction, identity ?? new AnonymousIdentity(), cancellation);
     }
 
     /// <summary>
@@ -55,13 +55,13 @@ public static class BackendFxApplicationInvokeExtension
         this IBackendFxApplication application,
         Func<IServiceProvider, CancellationToken, Task<TResult>> asyncFunction,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         TResult result = default!;
         await application.Invoker.InvokeAsync(
             async (sp, ct) => result = await asyncFunction(sp, ct),
             identity ?? new AnonymousIdentity(),
-            cancellationToken);
+            cancellation);
         return result;
     }
 

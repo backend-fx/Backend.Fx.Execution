@@ -18,7 +18,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
     public async Task Execute(
         ICommand command,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         await _invoker.InvokeAsync(
             async (sp, ct) =>
@@ -37,14 +37,13 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
 
                 await command.AsyncInvocation.Invoke(sp, ct).ConfigureAwait(false);
             },
-            identity ?? new AnonymousIdentity(),
-            cancellationToken).ConfigureAwait(false);
+            identity ?? new AnonymousIdentity(), cancellation).ConfigureAwait(false);
     }
 
     public async Task Execute(
         IInvokerCommand command,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         // ReSharper disable once SuspiciousTypeConversion.Global
         if (command is IAuthorizedCommand authorizedCommand)
@@ -58,7 +57,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
                 }
 
                 await authorizedCommand.AuthorizeAsync(sp, ct).ConfigureAwait(false);
-            }, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }, cancellation: cancellation).ConfigureAwait(false);
         }
 
         await command.AsyncInvocation.Invoke(
@@ -81,7 +80,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
 
 
         public Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-            IIdentity? identity = null, CancellationToken cancellationToken = default)
+            IIdentity? identity = null, CancellationToken cancellation = default)
         {
             return _invoker.InvokeAsync(
                 (provider, token) =>
@@ -90,7 +89,7 @@ public class CommandExecutor : IBackendFxApplicationCommandExecutor
                     return awaitableAsyncAction(provider, token);
                 },
                 identity,
-                cancellationToken);
+                cancellation);
         }
     }
 }

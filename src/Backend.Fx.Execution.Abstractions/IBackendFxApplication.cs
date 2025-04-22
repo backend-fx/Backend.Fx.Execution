@@ -44,21 +44,19 @@ public interface IBackendFxApplication : IDisposable
     /// <summary>
     /// allows synchronously awaiting application startup
     /// </summary>
-    Task WaitForBootAsync(CancellationToken cancellationToken = default);
+    Task WaitForBootAsync(CancellationToken cancellation = default);
 
     /// <summary>
     /// Initializes and starts the application (async)
     /// </summary>
     /// <returns></returns>
-    Task BootAsync(CancellationToken cancellationToken = default);
+    Task BootAsync(CancellationToken cancellation = default);
 
     /// <summary>
     /// Enables an optional feature. Must be done before calling <see cref="BootAsync"/>.
     /// </summary>
     /// <param name="feature"></param>
-    void EnableFeature(Feature feature);
-
-    void RequireDependantFeature<TFeature>() where TFeature : Feature;
+    void EnableFeature(IFeature feature);
 
     IDisposable UseSingleUserMode();
 }

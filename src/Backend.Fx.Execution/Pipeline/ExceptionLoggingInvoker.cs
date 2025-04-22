@@ -20,14 +20,12 @@ internal class ExceptionLoggingInvoker : IBackendFxApplicationInvoker
     public async Task InvokeAsync(
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         try
         {
-            await _invoker.InvokeAsync(
-                awaitableAsyncAction,
-                identity ?? new AnonymousIdentity(),
-                cancellationToken).ConfigureAwait(false);
+            await _invoker.InvokeAsync(awaitableAsyncAction, identity ?? new AnonymousIdentity(), cancellation)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {

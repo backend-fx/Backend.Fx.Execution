@@ -18,7 +18,7 @@ public abstract class CompositionRoot : ICompositionRoot
 
     public virtual void RegisterModules(params IModule[] modules)
     {
-        foreach (IModule module in modules)
+        foreach (var module in modules)
         {
             _logger.LogInformation("Registering {@Module}", module);
             module.Register(this);

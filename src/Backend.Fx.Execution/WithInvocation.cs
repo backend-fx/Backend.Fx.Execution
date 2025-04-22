@@ -38,12 +38,12 @@ public class WithInvocation<TService> where TService : class
     public Task DoAsync(
         Func<TService, CancellationToken, Task> asyncAction, 
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         identity ??= new AnonymousIdentity();
         return _invoker.InvokeAsync(
             (sp, ct) => asyncAction(sp.GetRequiredService<TService>(), ct),
-            identity, cancellationToken);
+            identity, cancellation);
     }
     
     /// <summary>
@@ -67,14 +67,14 @@ public class WithInvocation<TService> where TService : class
     public async Task<TResult> DoAsync<TResult>(
         Func<TService, CancellationToken, Task<TResult>> func,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
         await _invoker.InvokeAsync(
             async (sp, ct) => result = await func(sp.GetRequiredService<TService>(), ct),
             identity, 
-            cancellationToken);
+            cancellation);
         return result;
     }
 

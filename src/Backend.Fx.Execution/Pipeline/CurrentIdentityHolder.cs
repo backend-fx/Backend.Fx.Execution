@@ -20,6 +20,7 @@ public sealed class CurrentIdentityHolder : CurrentTHolder<IIdentity>
 
     protected override string Describe(IIdentity instance)
     {
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract - let's be safe
         var auth = instance?.IsAuthenticated == true 
             ? $"authenticated via {instance.AuthenticationType}" 
             : "not authenticated";

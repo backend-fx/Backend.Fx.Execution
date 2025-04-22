@@ -13,7 +13,7 @@ public readonly struct SystemIdentity : IIdentity, IEquatable<SystemIdentity>
 
     public bool IsAuthenticated => true;
 
-    public override bool Equals(object other)
+    public override bool Equals(object? other)
     {
         return other is SystemIdentity;
     }
