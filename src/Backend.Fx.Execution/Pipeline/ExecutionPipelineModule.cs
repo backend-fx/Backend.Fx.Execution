@@ -27,7 +27,6 @@ internal class ExecutionPipelineModule : IModule
         compositionRoot.Register(ServiceDescriptor.Singleton<Counter, Counter>());
         compositionRoot.Register(ServiceDescriptor.Scoped<IOperation, Operation>());
         compositionRoot.Register(ServiceDescriptor.Scoped<ICurrentTHolder<IIdentity>, CurrentIdentityHolder>());
-           
         compositionRoot.Register(ServiceDescriptor.Scoped<ICurrentTHolder<Correlation>, CurrentCorrelationHolder>());
     }
 }

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Backend.Fx.Execution.DependencyInjection;
 using Backend.Fx.Execution.Features;
 using Backend.Fx.Execution.Pipeline;
-using Backend.Fx.Execution.Pipeline.Commands;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
 using JetBrains.Annotations;
@@ -29,7 +28,9 @@ public class BackendFxApplication : IBackendFxApplication
     /// <param name="compositionRoot">The composition root of the dependency injection framework</param>
     /// <param name="exceptionLogger"></param>
     /// <param name="assemblies"></param>
-    public BackendFxApplication(ICompositionRoot compositionRoot, IExceptionLogger exceptionLogger,
+    public BackendFxApplication(
+        ICompositionRoot compositionRoot,
+        IExceptionLogger exceptionLogger,
         params Assembly[]? assemblies)
     {
         assemblies ??= [];
@@ -41,9 +42,6 @@ public class BackendFxApplication : IBackendFxApplication
 
         var invoker = new BackendFxApplicationInvoker(this);
         Invoker = new ExceptionLoggingInvoker(exceptionLogger, invoker);
-
-        var commandExecutor = new CommandExecutor(invoker);
-        CommandExecutor = new ExceptionLoggingCommandExecutor(exceptionLogger, commandExecutor);
 
         CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
         ExceptionLogger = exceptionLogger;
@@ -81,8 +79,6 @@ public class BackendFxApplication : IBackendFxApplication
 
     public IBackendFxApplicationInvoker Invoker { get; }
 
-    public IBackendFxApplicationCommandExecutor CommandExecutor { get; }
-
     public ICompositionRoot CompositionRoot { get; }
 
     public IExceptionLogger ExceptionLogger { get; }
@@ -100,6 +96,11 @@ public class BackendFxApplication : IBackendFxApplication
         _features.Add(feature);
     }
 
+    public TFeature? GetFeature<TFeature>() where TFeature : IFeature
+    {
+        return _features.OfType<TFeature>().SingleOrDefault();
+    }
+    
     public IDisposable UseSingleUserMode()
     {
         if (State == BackendFxApplicationState.SingleUserMode)
