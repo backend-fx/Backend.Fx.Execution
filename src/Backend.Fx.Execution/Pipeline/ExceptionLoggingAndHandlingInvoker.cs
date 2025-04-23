@@ -3,9 +3,11 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Backend.Fx.Logging;
+using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution.Pipeline;
 
+[PublicAPI]
 public class ExceptionLoggingAndHandlingInvoker : IBackendFxApplicationInvoker
 {
     private readonly IExceptionLogger _exceptionLogger;
@@ -20,12 +22,12 @@ public class ExceptionLoggingAndHandlingInvoker : IBackendFxApplicationInvoker
     public async Task InvokeAsync(
         Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
         IIdentity? identity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellation = default)
     {
         try
         {
             await _invoker
-                  .InvokeAsync(awaitableAsyncAction, identity, cancellationToken)
+                  .InvokeAsync(awaitableAsyncAction, identity, cancellation)
                   .ConfigureAwait(false);
         }
         catch (Exception ex)

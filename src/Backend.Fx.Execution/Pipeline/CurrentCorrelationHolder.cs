@@ -13,6 +13,7 @@ public sealed class CurrentCorrelationHolder : CurrentTHolder<Correlation>
 
     protected override string Describe(Correlation instance)
     {
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract - let's be safe
         return $"Correlation: {instance?.Id.ToString() ?? "NULL"}";
     }
 }

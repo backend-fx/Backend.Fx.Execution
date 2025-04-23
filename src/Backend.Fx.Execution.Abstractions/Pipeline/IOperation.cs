@@ -13,9 +13,9 @@ namespace Backend.Fx.Execution.Pipeline;
 [PublicAPI]
 public interface IOperation
 {
-    Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellationToken = default);
+    Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellation = default);
         
-    Task CompleteAsync(CancellationToken cancellationToken = default);
+    Task CompleteAsync(CancellationToken cancellation = default);
 
-    Task CancelAsync(CancellationToken cancellationToken = default);
+    Task CancelAsync(CancellationToken cancellation = default);
 }

@@ -21,7 +21,7 @@ internal sealed class Operation : IOperation
         _instanceId = counter.Count();
     }
 
-    public Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellationToken = default)
+    public Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellation = default)
     {
         if (_isActive != null)
         {
@@ -35,7 +35,7 @@ internal sealed class Operation : IOperation
         return Task.CompletedTask;
     }
 
-    public Task CompleteAsync(CancellationToken cancellationToken = default)
+    public Task CompleteAsync(CancellationToken cancellation = default)
     {
         _logger.LogInformation("Completing operation #{OperationId}", _instanceId);
         if (_isActive != true)
@@ -50,7 +50,7 @@ internal sealed class Operation : IOperation
         return Task.CompletedTask;
     }
 
-    public Task CancelAsync(CancellationToken cancellationToken = default)
+    public Task CancelAsync(CancellationToken cancellation = default)
     {
         _logger.LogInformation("Canceling operation #{OperationId}", _instanceId);
         _isActive = false;
