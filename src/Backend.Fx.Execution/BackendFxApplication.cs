@@ -17,6 +17,7 @@ namespace Backend.Fx.Execution;
 [PublicAPI]
 public class BackendFxApplication : IBackendFxApplication
 {
+    private readonly CancellationTokenSource _shutdownRequestedTokenSource = new();
     private readonly BackendFxApplicationStateMachine _stateMachine = new();
     private readonly ILogger _logger = Log.Create<BackendFxApplication>();
     private readonly List<IFeature> _features = [];
@@ -79,6 +80,8 @@ public class BackendFxApplication : IBackendFxApplication
 
     public IBackendFxApplicationInvoker Invoker { get; }
 
+    public CancellationToken ShutdownRequested => _shutdownRequestedTokenSource.Token;
+
     public ICompositionRoot CompositionRoot { get; }
 
     public IExceptionLogger ExceptionLogger { get; }
@@ -138,6 +141,9 @@ public class BackendFxApplication : IBackendFxApplication
     public void Dispose()
     {
         _logger.LogInformation("Application shut down initialized");
+        
+        _shutdownRequestedTokenSource.Cancel();
+        
         // ReSharper disable once SuspiciousTypeConversion.Global
         foreach (var disposableFeature in _features.OfType<IDisposable>())
         {
