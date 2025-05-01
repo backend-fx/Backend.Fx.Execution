@@ -20,6 +20,8 @@ public interface IBackendFxApplication : IDisposable
     /// The invoker runs a given action asynchronously in an application scope with injection facilities
     /// </summary>
     IBackendFxApplicationInvoker Invoker { get; }
+    
+    CancellationToken ShutdownRequested { get; }
 
     /// <summary>
     /// The composition root of the dependency injection framework
