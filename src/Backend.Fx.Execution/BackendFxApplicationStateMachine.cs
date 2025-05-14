@@ -19,6 +19,7 @@ public class BackendFxApplicationStateMachine
                 EnterState(BackendFxApplicationState.SingleUserMode);
                 break;
             case BackendFxApplicationState.SingleUserMode:
+                break;
             case BackendFxApplicationState.Crashed:
             default:
                 throw new InvalidOperationException("Cannot enter single user mode from state " + State);
@@ -32,8 +33,9 @@ public class BackendFxApplicationStateMachine
             case BackendFxApplicationState.SingleUserMode:
                 EnterState(BackendFxApplicationState.MultiUserMode);
                 break;
-            case BackendFxApplicationState.Halted:
             case BackendFxApplicationState.MultiUserMode:
+                break;
+            case BackendFxApplicationState.Halted:
             case BackendFxApplicationState.Crashed:
             default:
                 throw new InvalidOperationException("Cannot enter single user mode from state " + State);

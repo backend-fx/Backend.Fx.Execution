@@ -20,8 +20,8 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
     }
 
     public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
-                                  IIdentity? identity = null,
-                                  CancellationToken cancellation = default)
+        IIdentity? identity = null,
+        CancellationToken cancellation = default)
     {
         identity ??= new AnonymousIdentity();
 
@@ -29,39 +29,67 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 
         _logger.LogInformation("Invoking action as {Identity}", identity.Name);
         using var serviceScope = BeginScope(identity);
-        using var durationLogger = UseDurationLogger(serviceScope);
-        var operation = serviceScope.ServiceProvider.GetRequiredService<IOperation>();
+        var operation = BeginOperationAs(serviceScope, identity);
+        using var durationLogger = UseDurationLogger(serviceScope, operation.Counter);
         try
         {
             _logger.LogTrace("Starting operation");
             await operation
-                  .BeginAsync(serviceScope, cancellation)
-                  .ConfigureAwait(false);
+                .BeginAsync(serviceScope, cancellation)
+                .ConfigureAwait(false);
             _logger.LogTrace("operation started");
 
             _logger.LogTrace("Invoking action");
             await awaitableAsyncAction
-                  .Invoke(serviceScope.ServiceProvider, cancellation)
-                  .ConfigureAwait(false);
+                .Invoke(serviceScope.ServiceProvider, cancellation)
+                .ConfigureAwait(false);
             _logger.LogTrace("Action invoked");
 
             _logger.LogTrace("Completing operation");
             await operation
-                  .CompleteAsync(cancellation)
-                  .ConfigureAwait(false);
+                .CompleteAsync(cancellation)
+                .ConfigureAwait(false);
             _logger.LogTrace("Operation completed");
         }
-        catch
+        catch (Exception ex)
         {
+            try
+            {
+                ex.Data["OperationCounter"] = operation.Counter;
+            }
+            catch (Exception handlingEx)
+            {
+                _logger.LogWarning(handlingEx, "Failed to add operation counter to exception");
+            }
+
+            try
+            {
+                ex.Data["Identity"] = identity.Name;
+            }
+            catch (Exception handlingEx)
+            {
+                _logger.LogWarning(handlingEx, "Failed to add identity to exception");
+            }
+
+            try
+            {
+                ex.Data["Correlation"] = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
+                    .Current.Id;
+            }
+            catch (Exception handlingEx)
+            {
+                _logger.LogWarning(handlingEx, "Failed to add correlation to exception");
+            }
+
             try
             {
                 _logger.LogTrace("Canceling operation");
                 await operation.CancelAsync(cancellation).ConfigureAwait(false);
                 _logger.LogTrace("Operation canceled");
             }
-            catch (Exception ex)
+            catch (Exception cancelEx)
             {
-                _logger.LogError(ex, "Failed to cancel the operation");
+                _logger.LogError(cancelEx, "Failed to cancel the operation");
             }
 
             throw;
@@ -91,7 +119,6 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
     }
 
 
-
     private IServiceScope BeginScope(IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
@@ -104,13 +131,21 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         return serviceScope;
     }
 
+    private static IOperation BeginOperationAs(IServiceScope serviceScope, IIdentity? identity = null)
+    {
+        identity ??= new AnonymousIdentity();
+        var operation = serviceScope.ServiceProvider.GetRequiredService<IOperation>();
+        serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().ReplaceCurrent(identity);
+        return operation;
+    }
 
-    private IDisposable UseDurationLogger(IServiceScope serviceScope)
+
+    private IDisposable UseDurationLogger(IServiceScope serviceScope, int operationCounter)
     {
         var identity = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().Current;
         var correlation = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>().Current;
         return _logger.LogInformationDuration(
-            $"Starting invocation (correlation [{correlation.Id}]) for {identity.Name}",
-            $"Ended invocation (correlation [{correlation.Id}]) for {identity.Name}");
+            $"Starting invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}",
+            $"Ended invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}");
     }
 }

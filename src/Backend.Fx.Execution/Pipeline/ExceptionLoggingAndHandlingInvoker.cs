@@ -33,6 +33,7 @@ public class ExceptionLoggingAndHandlingInvoker : IBackendFxApplicationInvoker
         catch (Exception ex)
         {
             _exceptionLogger.LogException(ex);
+            ex.Data["ExceptionLogged"] = true;
         }
     }
 }

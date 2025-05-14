@@ -141,6 +141,7 @@ public class BackendFxApplication : IBackendFxApplication
     public void Dispose()
     {
         _logger.LogInformation("Application shut down initialized");
+        _stateMachine.EnterSingeUserMode();
         
         _shutdownRequestedTokenSource.Cancel();
         
