@@ -30,6 +30,7 @@ internal class ExceptionLoggingInvoker : IBackendFxApplicationInvoker
         catch (Exception ex)
         {
             _exceptionLogger.LogException(ex);
+            ex.Data["ExceptionLogged"] = true;
             throw;
         }
     }

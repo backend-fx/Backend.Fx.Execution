@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 namespace Backend.Fx.Execution.Pipeline;
 
 /// <summary>
-/// A guid that is unique for an invocation. In case of an invocation as result of handling an integration event, the correlation
-/// is stable, that is, the correlation can be used to track a logical action over different systems.
+/// A guid that is unique for an invocation. By calling <code>Resume(Guid correlationId)</code> a distributed process
+/// that spans multiple invocations can be identified as correlating.
 /// </summary>
 [PublicAPI]
 public sealed class Correlation
