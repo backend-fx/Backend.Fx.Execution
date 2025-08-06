@@ -148,9 +148,23 @@ public class BackendFxApplication : IBackendFxApplication
         // ReSharper disable once SuspiciousTypeConversion.Global
         foreach (var disposableFeature in _features.OfType<IDisposable>())
         {
-            disposableFeature.Dispose();
+            try
+            {
+                disposableFeature.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing feature {FeatureType}", disposableFeature.GetType().Name);
+            }
         }
 
-        CompositionRoot.Dispose();
+        try
+        {
+            CompositionRoot.Dispose();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error disposing {ApplicationType}", GetType().Name);
+        }
     }
 }
