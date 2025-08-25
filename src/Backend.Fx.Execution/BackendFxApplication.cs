@@ -22,6 +22,7 @@ public class BackendFxApplication : IBackendFxApplication
     private readonly ILogger _logger = Log.Create<BackendFxApplication>();
     private readonly List<IFeature> _features = [];
     private readonly Lazy<Task> _bootAction;
+    private readonly HashSet<Assembly> _assemblies;
 
     /// <summary>
     /// Initializes the application's runtime instance
@@ -46,7 +47,7 @@ public class BackendFxApplication : IBackendFxApplication
 
         CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
         ExceptionLogger = exceptionLogger;
-        Assemblies = assemblies;
+        _assemblies = new HashSet<Assembly>(assemblies);
         CompositionRoot.RegisterModules(new ExecutionPipelineModule(withFrozenClockDuringExecution: true));
 
         _bootAction = new Lazy<Task>(async () =>
@@ -76,7 +77,7 @@ public class BackendFxApplication : IBackendFxApplication
         });
     }
 
-    public Assembly[] Assemblies { get; }
+    public IEnumerable<Assembly> Assemblies => _assemblies;
 
     public IBackendFxApplicationInvoker Invoker { get; }
 
@@ -95,6 +96,11 @@ public class BackendFxApplication : IBackendFxApplication
             throw new InvalidOperationException("Features must be enabled before booting the application");
         }
 
+        foreach (var featureAssembly in feature.Assemblies)
+        {
+            _assemblies.Add(featureAssembly);
+        }
+        
         feature.Enable(this);
         _features.Add(feature);
     }

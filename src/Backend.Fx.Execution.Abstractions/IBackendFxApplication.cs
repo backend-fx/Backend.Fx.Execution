@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ public interface IBackendFxApplication : IDisposable
     /// </summary>
     IExceptionLogger ExceptionLogger { get; }
 
-    Assembly[] Assemblies { get; }
+    IEnumerable<Assembly> Assemblies { get; }
 
     BackendFxApplicationState State { get; }
 

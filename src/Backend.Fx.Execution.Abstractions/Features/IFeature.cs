@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Reflection;
 using JetBrains.Annotations;
 
 namespace Backend.Fx.Execution.Features;
@@ -8,5 +10,7 @@ namespace Backend.Fx.Execution.Features;
 [PublicAPI]
 public interface IFeature
 {
-    public void Enable(IBackendFxApplication application);
+    IEnumerable<Assembly> Assemblies { get; }
+    
+    void Enable(IBackendFxApplication application);
 }
