@@ -53,6 +53,9 @@ public interface IBackendFxApplication : IDisposable
     /// Enables an optional feature. Must be done before calling <see cref="BootAsync"/>.
     /// </summary>
     /// <param name="feature"></param>
+    void AddFeature(IFeature feature);
+    
+    [Obsolete("Use AddFeature instead")]
     void EnableFeature(IFeature feature);
 
     TFeature? GetFeature<TFeature>() where TFeature : IFeature;
