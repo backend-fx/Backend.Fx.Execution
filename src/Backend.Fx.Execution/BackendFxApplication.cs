@@ -89,7 +89,9 @@ public class BackendFxApplication : IBackendFxApplication
 
     public BackendFxApplicationState State => _stateMachine.State;
 
-    public virtual void EnableFeature(IFeature feature)
+    public virtual void EnableFeature(IFeature feature) => AddFeature(feature);
+    
+    public virtual void AddFeature(IFeature feature)
     {
         if (_bootAction.IsValueCreated)
         {
@@ -101,7 +103,6 @@ public class BackendFxApplication : IBackendFxApplication
             _assemblies.Add(featureAssembly);
         }
         
-        feature.Enable(this);
         _features.Add(feature);
     }
 
@@ -123,6 +124,7 @@ public class BackendFxApplication : IBackendFxApplication
 
     public async Task BootAsync(CancellationToken cancellation = default)
     {
+        _features.ForEach(feat => feat.Enable(this));
         await _bootAction.Value.ConfigureAwait(false);
     }
 
