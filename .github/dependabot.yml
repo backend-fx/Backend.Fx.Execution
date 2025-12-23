@@ -5,17 +5,18 @@ updates:
   schedule:
     interval: "daily"
 
-- package-ecosystem: "nuget"
-  directory: "src"
+- package-ecosystem: nuget
+  directories:
+    - /src
   schedule:
-    interval: "daily"
+    interval: daily
   open-pull-requests-limit: 10
   allow:
-  - dependency-type: direct
+    - dependency-type: direct
   groups:
     dotnet-minor:
       patterns:
-      - "*"
+        - '*'
       update-types:
-      - "minor"
-      - "patch"
+        - minor
+        - patch
