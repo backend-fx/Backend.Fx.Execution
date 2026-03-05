@@ -13,6 +13,9 @@ public class OperationSpy : IOperation
 {
     private readonly IOperationSpy _operationSpy;
     private readonly IOperation _operation;
+    private int _counter;
+
+    public int Counter => _counter;
 
     public OperationSpy(IOperationSpy operationSpy, IOperation operation)
     {
@@ -22,6 +25,7 @@ public class OperationSpy : IOperation
 
     public async Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellationToken = default)
     {
+        _counter++;
         await _operationSpy.BeginAsync(serviceScope);
         await _operation.BeginAsync(serviceScope);
     }

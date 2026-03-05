@@ -25,7 +25,7 @@ public class TheCurrentIdentityHolder
     [Fact]
     public void DefaultsToAnonymousIdentityWhenCreatedWithNull()
     {
-        var sut = CurrentIdentityHolder.Create(null);
+        var sut = CurrentIdentityHolder.Create(null!);
         Assert.Equal(sut.Current, new AnonymousIdentity());
     }
 }

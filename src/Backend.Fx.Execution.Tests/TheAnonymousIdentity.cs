@@ -33,7 +33,7 @@ public class TheAnonymousIdentity
     public void HasNoAuthenticationType()
     {
         var sut = new AnonymousIdentity();
-        Assert.Null(sut.AuthenticationType);
+        Assert.Empty(sut.AuthenticationType);
     }
 
     [Fact]
