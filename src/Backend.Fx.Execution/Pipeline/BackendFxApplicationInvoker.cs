@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +14,22 @@ namespace Backend.Fx.Execution.Pipeline;
 
 internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 {
+    private static readonly ActivitySource ActivitySource = new("Backend.Fx.Execution");
+    private static readonly Meter Meter = new("Backend.Fx.Execution");
+    private static readonly Counter<long> InvocationTotal = Meter.CreateCounter<long>("backendfx.invocations.total");
+
+    private static readonly Counter<long> InvocationSucceeded =
+        Meter.CreateCounter<long>("backendfx.invocations.succeeded");
+
+    private static readonly Counter<long>
+        InvocationFaulted = Meter.CreateCounter<long>("backendfx.invocations.faulted");
+
+    private static readonly Counter<long> InvocationCanceled =
+        Meter.CreateCounter<long>("backendfx.invocations.canceled");
+
+    private static readonly Histogram<double> InvocationDurationMs =
+        Meter.CreateHistogram<double>("backendfx.invocations.duration_ms");
+
     private readonly IBackendFxApplication _application;
     private readonly ILogger _logger = Log.Create<BackendFxApplicationInvoker>();
 
@@ -30,7 +49,25 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         _logger.LogInformation("Invoking action as {Identity}", identity.Name);
         using var serviceScope = BeginScope(identity);
         var operation = BeginOperationAs(serviceScope, identity);
+        var correlation = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>().Current;
+        using var invocationScope = _logger.BeginScope(new Dictionary<string, object?>
+        {
+            ["OperationCounter"] = operation.Counter,
+            ["CorrelationId"] = correlation.Id,
+            ["Identity"] = identity.Name,
+            ["Invoker"] = nameof(BackendFxApplicationInvoker)
+        });
         using var durationLogger = UseDurationLogger(serviceScope, operation.Counter);
+        var invocationDuration = Stopwatch.StartNew();
+        var outcome = "Succeeded";
+        var identityType = GetIdentityType(identity);
+        using var invocationActivity = ActivitySource.StartActivity("backendfx.invocation");
+
+        invocationActivity?.SetTag("backendfx.operation.counter", operation.Counter);
+        invocationActivity?.SetTag("backendfx.correlation.id", correlation.Id.ToString());
+        invocationActivity?.SetTag("backendfx.identity.type", identityType);
+        invocationActivity?.SetTag("backendfx.app.state.start", _application.State.ToString());
+        
         try
         {
             _logger.LogTrace("Starting operation");
@@ -50,9 +87,33 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
                 .CompleteAsync(cancellation)
                 .ConfigureAwait(false);
             _logger.LogTrace("Operation completed");
+
+            invocationActivity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            outcome = "Canceled";
+            invocationActivity?.SetTag("backendfx.canceled", true);
+
+            try
+            {
+                _logger.LogTrace("Canceling operation");
+                await operation.CancelAsync(cancellation).ConfigureAwait(false);
+                _logger.LogTrace("Operation canceled");
+            }
+            catch (Exception cancelEx)
+            {
+                _logger.LogError(cancelEx, "Failed to cancel the operation");
+            }
+
+            throw;
         }
         catch (Exception ex)
         {
+            outcome = "Faulted";
+            invocationActivity?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
+            invocationActivity?.SetTag("backendfx.exception.type", ex.GetType().FullName);
+
             try
             {
                 ex.Data["OperationCounter"] = operation.Counter;
@@ -93,6 +154,42 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
             }
 
             throw;
+        }
+        finally
+        {
+            invocationActivity?.SetTag("backendfx.outcome", outcome);
+            invocationActivity?.SetTag("backendfx.duration.ms", invocationDuration.Elapsed.TotalMilliseconds);
+            invocationActivity?.SetTag("backendfx.app.state.end", _application.State.ToString());
+
+            var metricTags = new KeyValuePair<string, object?>[]
+            {
+                new("outcome", outcome),
+                new("identity_type", identityType),
+                new("identity_name", identity.Name),
+                new("app_state", _application.State.ToString())
+            };
+
+            InvocationTotal.Add(1, metricTags);
+            InvocationDurationMs.Record(invocationDuration.Elapsed.TotalMilliseconds, metricTags);
+
+            switch (outcome)
+            {
+                case "Succeeded":
+                    InvocationSucceeded.Add(1, metricTags);
+                    break;
+                case "Canceled":
+                    InvocationCanceled.Add(1, metricTags);
+                    break;
+                case "Faulted":
+                    InvocationFaulted.Add(1, metricTags);
+                    break;
+            }
+
+            _logger.LogInformation(
+                "Invocation {OperationCounter} ended with outcome {Outcome} in {DurationMs} ms",
+                operation.Counter,
+                outcome,
+                invocationDuration.ElapsedMilliseconds);
         }
     }
 
@@ -147,5 +244,15 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         return _logger.LogInformationDuration(
             $"Starting invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}",
             $"Ended invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}");
+    }
+
+    private static string GetIdentityType(IIdentity identity)
+    {
+        return identity switch
+        {
+            SystemIdentity => "SystemIdentity",
+            AnonymousIdentity => "AnonymousIdentity",
+            _ => identity.GetType().Name
+        };
     }
 }
