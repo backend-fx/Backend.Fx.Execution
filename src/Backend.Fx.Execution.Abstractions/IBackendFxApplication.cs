@@ -15,7 +15,7 @@ namespace Backend.Fx.Execution;
 /// The root object of the whole backend fx application framework
 /// </summary>
 [PublicAPI]
-public interface IBackendFxApplication : IDisposable
+public interface IBackendFxApplication : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// The invoker runs a given action asynchronously in an application scope with injection facilities
