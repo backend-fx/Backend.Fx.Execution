@@ -1,7 +1,6 @@
 using System;
 using Backend.Fx.Execution.Pipeline;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Backend.Fx.Execution.Tests;
 

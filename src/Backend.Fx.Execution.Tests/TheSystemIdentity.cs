@@ -50,7 +50,9 @@ public class TheSystemIdentity
     {
         var sut = new SystemIdentity();
         var other = new AnonymousIdentity();
+        // ReSharper disable once SuspiciousTypeConversion.Global
         Assert.False(sut.Equals(other));
+        // ReSharper disable once SuspiciousTypeConversion.Global
         Assert.False(Equals(sut, other));
         Assert.NotEqual(sut.GetHashCode(), other.GetHashCode());
     }

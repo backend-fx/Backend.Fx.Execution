@@ -1,18 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <IncludeSymbols>true</IncludeSymbols>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Authors>Marc Wittke</Authors>
+        <Company>anic GmbH</Company>
+        <Copyright>All rights reserved. Distributed under the terms of the MIT License.</Copyright>
+        <Description>Execution pipeline of Backend.Fx</Description>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+        <PackageLicense>MIT</PackageLicense>
+        <PackageProjectUrl>https://github.com/backend-fx/Backend.Fx.Execution</PackageProjectUrl>
+        <Product>Backend.Fx</Product>
+        <RepositoryType>Git</RepositoryType>
+        <RepositoryUrl>https://github.com/backend-fx/Backend.Fx.Execution.git</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Backend.Fx.Execution.Abstractions\Backend.Fx.Execution.Abstractions.csproj" />
+        <ProjectReference Include="..\Backend.Fx.Execution.Abstractions\Backend.Fx.Execution.Abstractions.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
-        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.7" />
+        <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All"/>
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.12"/>
     </ItemGroup>
 
 </Project>

@@ -26,7 +26,14 @@ public class TheExceptionLoggingAndHandlingInvoker
     [Fact]
     public void SwallowsExceptions()
     {
-        _sut.InvokeAsync((_, _) => Task.CompletedTask);
-        _sut.InvokeAsync((_, _) => throw new DivideByZeroException());
+        _sut.InvokeAsync(
+            (_, _) => Task.CompletedTask,
+            new AnonymousIdentity(), 
+            TestContext.Current.CancellationToken);
+        
+        _sut.InvokeAsync(
+            (_, _) => throw new DivideByZeroException(),
+            new AnonymousIdentity(),
+            TestContext.Current.CancellationToken);
     }
 }
