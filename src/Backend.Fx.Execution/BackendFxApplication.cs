@@ -231,15 +231,7 @@ public class BackendFxApplication : IBackendFxApplication
 
         try
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            if (CompositionRoot is IAsyncDisposable asyncDisposableCompositionRoot)
-            {
-                await asyncDisposableCompositionRoot.DisposeAsync().ConfigureAwait(false);
-            }
-            else
-            {
-                CompositionRoot.Dispose();
-            }
+            await CompositionRoot.DisposeAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {

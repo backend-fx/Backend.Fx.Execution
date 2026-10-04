@@ -12,7 +12,7 @@ namespace Backend.Fx.Execution.DependencyInjection;
 /// http://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/
 /// </summary>
 [PublicAPI]
-public interface ICompositionRoot : IDisposable
+public interface ICompositionRoot : IDisposable, IAsyncDisposable
 {
     void Verify();
 

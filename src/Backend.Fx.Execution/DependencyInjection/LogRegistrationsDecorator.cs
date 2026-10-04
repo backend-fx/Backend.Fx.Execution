@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Backend.Fx.Logging;
 using Backend.Fx.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,11 @@ public class LogRegistrationsDecorator : ICompositionRoot
     public void Dispose()
     {
         _compositionRoot.Dispose();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return _compositionRoot.DisposeAsync();
     }
 
     public void Verify()
