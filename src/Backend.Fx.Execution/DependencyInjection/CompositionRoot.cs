@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Backend.Fx.Logging;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,5 +40,22 @@ public abstract class CompositionRoot : ICompositionRoot
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Override to asynchronously release the resources of the underlying injection framework (e.g. when its
+    /// <see cref="IServiceProvider"/> implements <see cref="IAsyncDisposable"/>). The default implementation
+    /// falls back to the synchronous <see cref="Dispose(bool)"/>.
+    /// </summary>
+    protected virtual ValueTask DisposeAsyncCore()
+    {
+        Dispose(true);
+        return default;
     }
 }

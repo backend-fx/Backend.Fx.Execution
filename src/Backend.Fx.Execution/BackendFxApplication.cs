@@ -23,6 +23,8 @@ public class BackendFxApplication : IBackendFxApplication
     private readonly List<IFeature> _features = [];
     private readonly Lazy<Task> _bootAction;
     private readonly HashSet<Assembly> _assemblies;
+    private CancellationToken _bootCancellation;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes the application's runtime instance
@@ -56,6 +58,10 @@ public class BackendFxApplication : IBackendFxApplication
 
             try
             {
+                using var bootCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _bootCancellation, _shutdownRequestedTokenSource.Token);
+                var bootCancellation = bootCancellationSource.Token;
+
                 CompositionRoot.Verify();
 
                 _stateMachine.EnterSingeUserMode();
@@ -63,7 +69,7 @@ public class BackendFxApplication : IBackendFxApplication
                 // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
                 foreach (var bootableFeature in _features.OfType<IBootableFeature>())
                 {
-                    await bootableFeature.BootAsync(this).ConfigureAwait(false);
+                    await bootableFeature.BootAsync(this, bootCancellation).ConfigureAwait(false);
                 }
 
                 _stateMachine.EnterMultiUserMode();
@@ -124,6 +130,7 @@ public class BackendFxApplication : IBackendFxApplication
 
     public async Task BootAsync(CancellationToken cancellation = default)
     {
+        _bootCancellation = cancellation;
         _features.ForEach(feat => feat.Enable(this));
         await _bootAction.Value.ConfigureAwait(false);
     }
@@ -148,6 +155,13 @@ public class BackendFxApplication : IBackendFxApplication
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         _logger.LogInformation("Application shut down initialized");
         _stateMachine.EnterSingeUserMode();
         
@@ -174,5 +188,58 @@ public class BackendFxApplication : IBackendFxApplication
         {
             _logger.LogError(ex, "Error disposing {ApplicationType}", GetType().Name);
         }
+
+        _shutdownRequestedTokenSource.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        _logger.LogInformation("Application shut down initialized");
+        _stateMachine.EnterSingeUserMode();
+
+        _shutdownRequestedTokenSource.Cancel();
+
+        foreach (var feature in _features)
+        {
+            try
+            {
+                switch (feature)
+                {
+                    // ReSharper disable once SuspiciousTypeConversion.Global
+                    case IAsyncDisposable asyncDisposableFeature:
+                        await asyncDisposableFeature.DisposeAsync().ConfigureAwait(false);
+                        break;
+                    
+                    // ReSharper disable once SuspiciousTypeConversion.Global
+                    case IDisposable disposableFeature:
+                        disposableFeature.Dispose();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing feature {FeatureType}", feature.GetType().Name);
+            }
+        }
+
+        try
+        {
+            await CompositionRoot.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error disposing {ApplicationType}", GetType().Name);
+        }
+
+        _shutdownRequestedTokenSource.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

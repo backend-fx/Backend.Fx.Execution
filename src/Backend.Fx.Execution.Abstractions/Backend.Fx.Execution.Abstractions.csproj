@@ -26,6 +26,7 @@
     <ItemGroup>
         <PackageReference Include="Backend.Fx" Version="8.1.13"/>
         <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.12"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12"/>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All"/>
     </ItemGroup>
