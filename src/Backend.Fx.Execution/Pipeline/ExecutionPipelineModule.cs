@@ -1,4 +1,5 @@
 using System.Security.Principal;
+using System.Threading;
 using Backend.Fx.Execution.DependencyInjection;
 using Backend.Fx.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,5 +29,7 @@ internal class ExecutionPipelineModule : IModule
         compositionRoot.Register(ServiceDescriptor.Scoped<IOperation, Operation>());
         compositionRoot.Register(ServiceDescriptor.Scoped<ICurrentTHolder<IIdentity>, CurrentIdentityHolder>());
         compositionRoot.Register(ServiceDescriptor.Scoped<ICurrentTHolder<Correlation>, CurrentCorrelationHolder>());
+        compositionRoot.Register(
+            ServiceDescriptor.Scoped<ICurrentTHolder<CancellationToken>, CurrentCancellationHolder>());
     }
 }

@@ -48,6 +48,12 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 
         _logger.LogInformation("Invoking action as {Identity}", identity.Name);
         using var serviceScope = BeginScope(identity);
+        using var invocationCancellationSource =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellation, _application.ShutdownRequested);
+        var invocationCancellation = invocationCancellationSource.Token;
+        serviceScope.ServiceProvider
+            .GetRequiredService<ICurrentTHolder<CancellationToken>>()
+            .ReplaceCurrent(invocationCancellation);
         var operation = BeginOperationAs(serviceScope, identity);
         var correlation = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>().Current;
         using var invocationScope = _logger.BeginScope(new Dictionary<string, object?>
@@ -72,25 +78,25 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         {
             _logger.LogTrace("Starting operation");
             await operation
-                .BeginAsync(serviceScope, cancellation)
+                .BeginAsync(serviceScope, invocationCancellation)
                 .ConfigureAwait(false);
             _logger.LogTrace("operation started");
 
             _logger.LogTrace("Invoking action");
             await awaitableAsyncAction
-                .Invoke(serviceScope.ServiceProvider, cancellation)
+                .Invoke(serviceScope.ServiceProvider, invocationCancellation)
                 .ConfigureAwait(false);
             _logger.LogTrace("Action invoked");
 
             _logger.LogTrace("Completing operation");
             await operation
-                .CompleteAsync(cancellation)
+                .CompleteAsync(invocationCancellation)
                 .ConfigureAwait(false);
             _logger.LogTrace("Operation completed");
 
             invocationActivity?.SetStatus(ActivityStatusCode.Ok);
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        catch (OperationCanceledException) when (invocationCancellation.IsCancellationRequested)
         {
             outcome = "Canceled";
             invocationActivity?.SetTag("backendfx.canceled", true);
@@ -98,7 +104,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
             try
             {
                 _logger.LogTrace("Canceling operation");
-                await operation.CancelAsync(cancellation).ConfigureAwait(false);
+                await operation.CancelAsync(invocationCancellation).ConfigureAwait(false);
                 _logger.LogTrace("Operation canceled");
             }
             catch (Exception cancelEx)
@@ -145,7 +151,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
             try
             {
                 _logger.LogTrace("Canceling operation");
-                await operation.CancelAsync(cancellation).ConfigureAwait(false);
+                await operation.CancelAsync(invocationCancellation).ConfigureAwait(false);
                 _logger.LogTrace("Operation canceled");
             }
             catch (Exception cancelEx)
