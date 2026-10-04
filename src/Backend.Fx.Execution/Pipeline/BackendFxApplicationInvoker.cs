@@ -61,7 +61,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         var invocationDuration = Stopwatch.StartNew();
         var outcome = "Succeeded";
         var identityType = GetIdentityType(identity);
-        using var invocationActivity = ActivitySource.StartActivity("backendfx.invocation");
+        using var invocationActivity = ActivitySource.StartActivity();
 
         invocationActivity?.SetTag("backendfx.operation.counter", operation.Counter);
         invocationActivity?.SetTag("backendfx.correlation.id", correlation.Id.ToString());

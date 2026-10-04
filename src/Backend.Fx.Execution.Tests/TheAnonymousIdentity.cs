@@ -1,7 +1,6 @@
 using System.Security.Principal;
 using Backend.Fx.Execution.Pipeline;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Backend.Fx.Execution.Tests;
 
@@ -52,6 +51,7 @@ public class TheAnonymousIdentity
         var sut = new AnonymousIdentity();
         var other = new SystemIdentity();
         Assert.False(sut.Equals(other));
+        // ReSharper disable once SuspiciousTypeConversion.Global
         Assert.False(Equals(sut, other));
         Assert.NotEqual(sut.GetHashCode(), other.GetHashCode());
     }

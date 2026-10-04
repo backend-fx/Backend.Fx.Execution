@@ -1,15 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <IncludeSymbols>true</IncludeSymbols>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RootNamespace>Backend.Fx.Execution</RootNamespace>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Authors>Marc Wittke</Authors>
+        <Company>anic GmbH</Company>
+        <Copyright>All rights reserved. Distributed under the terms of the MIT License.</Copyright>
+        <Description>Abstractions of the Backend.Fx execution pipeline</Description>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+        <PackageLicense>MIT</PackageLicense>
+        <PackageProjectUrl>https://github.com/backend-fx/Backend.Fx.Execution</PackageProjectUrl>
+        <Product>Backend.Fx</Product>
+        <RepositoryType>Git</RepositoryType>
+        <RepositoryUrl>https://github.com/backend-fx/Backend.Fx.Execution.git</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Backend.Fx" Version="8.1.9" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203" PrivateAssets="All" />
+        <PackageReference Include="Backend.Fx" Version="8.1.13"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All"/>
     </ItemGroup>
 </Project>

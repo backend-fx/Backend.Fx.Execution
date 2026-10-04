@@ -23,22 +23,22 @@ public class OperationSpy : IOperation
         _operation = operation;
     }
 
-    public async Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellationToken = default)
+    public async Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellation = default)
     {
         _counter++;
-        await _operationSpy.BeginAsync(serviceScope);
-        await _operation.BeginAsync(serviceScope);
+        await _operationSpy.BeginAsync(serviceScope, cancellation);
+        await _operation.BeginAsync(serviceScope, cancellation);
     }
 
-    public async Task CompleteAsync(CancellationToken cancellationToken = default)
+    public async Task CompleteAsync(CancellationToken cancellation = default)
     {
-        await _operationSpy.CompleteAsync(cancellationToken);
-        await _operation.CompleteAsync(cancellationToken);
+        await _operationSpy.CompleteAsync(cancellation);
+        await _operation.CompleteAsync(cancellation);
     }
 
-    public async Task CancelAsync(CancellationToken cancellationToken = default)
+    public async Task CancelAsync(CancellationToken cancellation = default)
     {
-        await _operationSpy.CancelAsync(cancellationToken);
-        await _operation.CancelAsync(cancellationToken);
+        await _operationSpy.CancelAsync(cancellation);
+        await _operation.CancelAsync(cancellation);
     }
 }
