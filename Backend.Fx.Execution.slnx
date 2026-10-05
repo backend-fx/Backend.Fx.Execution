@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Backend.Fx.Execution.Abstractions/Backend.Fx.Execution.Abstractions.csproj" />
+  <Project Path="src/Backend.Fx.Execution.Tests/Backend.Fx.Execution.Tests.csproj" />
+  <Project Path="src/Backend.Fx.Execution/Backend.Fx.Execution.csproj" />
+</Solution>
