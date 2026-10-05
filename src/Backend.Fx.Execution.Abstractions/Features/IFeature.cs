@@ -11,6 +11,6 @@ namespace Backend.Fx.Execution.Features;
 public interface IFeature
 {
     IEnumerable<Assembly> Assemblies { get; }
-    
+
     void Enable(IBackendFxApplication application);
 }

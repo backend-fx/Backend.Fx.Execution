@@ -16,19 +16,25 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 {
     private static readonly ActivitySource ActivitySource = new("Backend.Fx.Execution");
     private static readonly Meter Meter = new("Backend.Fx.Execution");
-    private static readonly Counter<long> InvocationTotal = Meter.CreateCounter<long>("backendfx.invocations.total");
+    private static readonly Counter<long> InvocationTotal = Meter.CreateCounter<long>(
+        "backendfx.invocations.total"
+    );
 
-    private static readonly Counter<long> InvocationSucceeded =
-        Meter.CreateCounter<long>("backendfx.invocations.succeeded");
+    private static readonly Counter<long> InvocationSucceeded = Meter.CreateCounter<long>(
+        "backendfx.invocations.succeeded"
+    );
 
-    private static readonly Counter<long>
-        InvocationFaulted = Meter.CreateCounter<long>("backendfx.invocations.faulted");
+    private static readonly Counter<long> InvocationFaulted = Meter.CreateCounter<long>(
+        "backendfx.invocations.faulted"
+    );
 
-    private static readonly Counter<long> InvocationCanceled =
-        Meter.CreateCounter<long>("backendfx.invocations.canceled");
+    private static readonly Counter<long> InvocationCanceled = Meter.CreateCounter<long>(
+        "backendfx.invocations.canceled"
+    );
 
-    private static readonly Histogram<double> InvocationDurationMs =
-        Meter.CreateHistogram<double>("backendfx.invocations.duration_ms");
+    private static readonly Histogram<double> InvocationDurationMs = Meter.CreateHistogram<double>(
+        "backendfx.invocations.duration_ms"
+    );
 
     private readonly IBackendFxApplication _application;
     private readonly ILogger _logger = Log.Create<BackendFxApplicationInvoker>();
@@ -38,9 +44,11 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         _application = application;
     }
 
-    public async Task InvokeAsync(Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
+    public async Task InvokeAsync(
+        Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
         IIdentity? identity = null,
-        CancellationToken cancellation = default)
+        CancellationToken cancellation = default
+    )
     {
         identity ??= new AnonymousIdentity();
 
@@ -48,21 +56,27 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 
         _logger.LogInformation("Invoking action as {Identity}", identity.Name);
         using var serviceScope = BeginScope(identity);
-        using var invocationCancellationSource =
-            CancellationTokenSource.CreateLinkedTokenSource(cancellation, _application.ShutdownRequested);
+        using var invocationCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellation,
+            _application.ShutdownRequested
+        );
         var invocationCancellation = invocationCancellationSource.Token;
-        serviceScope.ServiceProvider
-            .GetRequiredService<ICurrentTHolder<CancellationToken>>()
+        serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<CancellationToken>>()
             .ReplaceCurrent(invocationCancellation);
         var operation = BeginOperationAs(serviceScope, identity);
-        var correlation = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>().Current;
-        using var invocationScope = _logger.BeginScope(new Dictionary<string, object?>
-        {
-            ["OperationCounter"] = operation.Counter,
-            ["CorrelationId"] = correlation.Id,
-            ["Identity"] = identity.Name,
-            ["Invoker"] = nameof(BackendFxApplicationInvoker)
-        });
+        var correlation = serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
+            .Current;
+        using var invocationScope = _logger.BeginScope(
+            new Dictionary<string, object?>
+            {
+                ["OperationCounter"] = operation.Counter,
+                ["CorrelationId"] = correlation.Id,
+                ["Identity"] = identity.Name,
+                ["Invoker"] = nameof(BackendFxApplicationInvoker),
+            }
+        );
         using var durationLogger = UseDurationLogger(serviceScope, operation.Counter);
         var invocationDuration = Stopwatch.StartNew();
         var outcome = "Succeeded";
@@ -73,13 +87,11 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         invocationActivity?.SetTag("backendfx.correlation.id", correlation.Id.ToString());
         invocationActivity?.SetTag("backendfx.identity.type", identityType);
         invocationActivity?.SetTag("backendfx.app.state.start", _application.State.ToString());
-        
+
         try
         {
             _logger.LogTrace("Starting operation");
-            await operation
-                .BeginAsync(serviceScope, invocationCancellation)
-                .ConfigureAwait(false);
+            await operation.BeginAsync(serviceScope, invocationCancellation).ConfigureAwait(false);
             _logger.LogTrace("operation started");
 
             _logger.LogTrace("Invoking action");
@@ -89,9 +101,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
             _logger.LogTrace("Action invoked");
 
             _logger.LogTrace("Completing operation");
-            await operation
-                .CompleteAsync(invocationCancellation)
-                .ConfigureAwait(false);
+            await operation.CompleteAsync(invocationCancellation).ConfigureAwait(false);
             _logger.LogTrace("Operation completed");
 
             invocationActivity?.SetStatus(ActivityStatusCode.Ok);
@@ -140,7 +150,8 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 
             try
             {
-                ex.Data["Correlation"] = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
+                ex.Data["Correlation"] = serviceScope
+                    .ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
                     .Current.Id;
             }
             catch (Exception handlingEx)
@@ -164,7 +175,10 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         finally
         {
             invocationActivity?.SetTag("backendfx.outcome", outcome);
-            invocationActivity?.SetTag("backendfx.duration.ms", invocationDuration.Elapsed.TotalMilliseconds);
+            invocationActivity?.SetTag(
+                "backendfx.duration.ms",
+                invocationDuration.Elapsed.TotalMilliseconds
+            );
             invocationActivity?.SetTag("backendfx.app.state.end", _application.State.ToString());
 
             var metricTags = new KeyValuePair<string, object?>[]
@@ -172,7 +186,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
                 new("outcome", outcome),
                 new("identity_type", identityType),
                 new("identity_name", identity.Name),
-                new("app_state", _application.State.ToString())
+                new("app_state", _application.State.ToString()),
             };
 
             InvocationTotal.Add(1, metricTags);
@@ -195,20 +209,31 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
                 "Invocation {OperationCounter} ended with outcome {Outcome} in {DurationMs} ms",
                 operation.Counter,
                 outcome,
-                invocationDuration.ElapsedMilliseconds);
+                invocationDuration.ElapsedMilliseconds
+            );
         }
     }
 
-    private async Task AssertCorrectUserModeAsync(IIdentity identity, CancellationToken cancellation)
+    private async Task AssertCorrectUserModeAsync(
+        IIdentity identity,
+        CancellationToken cancellation
+    )
     {
         // SystemIdentity is allowed to run in SingleUserMode, too
-        if (identity is SystemIdentity && _application.State is BackendFxApplicationState.SingleUserMode)
+        if (
+            identity is SystemIdentity
+            && _application.State is BackendFxApplicationState.SingleUserMode
+        )
         {
             return;
         }
 
         // all other users must wait for MultiUserMode
-        if (_application.State is BackendFxApplicationState.Halted or BackendFxApplicationState.SingleUserMode)
+        if (
+            _application.State
+            is BackendFxApplicationState.Halted
+                or BackendFxApplicationState.SingleUserMode
+        )
         {
             _logger.LogInformation("Waiting for multi user mode");
             await _application.WaitForBootAsync(cancellation).ConfigureAwait(false);
@@ -217,10 +242,11 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         // the application must not be crashed at this point
         if (_application.State == BackendFxApplicationState.Crashed)
         {
-            throw new InvalidOperationException("The application failed to start. Cannot execute invocations.");
+            throw new InvalidOperationException(
+                "The application failed to start. Cannot execute invocations."
+            );
         }
     }
-
 
     private IServiceScope BeginScope(IIdentity? identity = null)
     {
@@ -229,27 +255,38 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         _logger.LogTrace("Beginning scope for {Identity}", identity.Name);
         var serviceScope = _application.CompositionRoot.BeginScope();
 
-        serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().ReplaceCurrent(identity);
+        serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
+            .ReplaceCurrent(identity);
 
         return serviceScope;
     }
 
-    private static IOperation BeginOperationAs(IServiceScope serviceScope, IIdentity? identity = null)
+    private static IOperation BeginOperationAs(
+        IServiceScope serviceScope,
+        IIdentity? identity = null
+    )
     {
         identity ??= new AnonymousIdentity();
         var operation = serviceScope.ServiceProvider.GetRequiredService<IOperation>();
-        serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().ReplaceCurrent(identity);
+        serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
+            .ReplaceCurrent(identity);
         return operation;
     }
 
-
     private IDisposable UseDurationLogger(IServiceScope serviceScope, int operationCounter)
     {
-        var identity = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>().Current;
-        var correlation = serviceScope.ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>().Current;
+        var identity = serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
+            .Current;
+        var correlation = serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
+            .Current;
         return _logger.LogInformationDuration(
             $"Starting invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}",
-            $"Ended invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}");
+            $"Ended invocation[{operationCounter}] (correlation [{correlation.Id}]) for {identity.Name}"
+        );
     }
 
     private static string GetIdentityType(IIdentity identity)
@@ -258,7 +295,7 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         {
             SystemIdentity => "SystemIdentity",
             AnonymousIdentity => "AnonymousIdentity",
-            _ => identity.GetType().Name
+            _ => identity.GetType().Name,
         };
     }
 }

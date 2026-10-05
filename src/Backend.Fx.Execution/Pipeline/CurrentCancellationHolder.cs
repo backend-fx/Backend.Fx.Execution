@@ -19,7 +19,7 @@ public sealed class CurrentCancellationHolder : CurrentTHolder<CancellationToken
 
     protected override string Describe(CancellationToken instance)
     {
-        return $"CancellationToken: {(instance.CanBeCanceled ? "cancelable" : "non-cancelable")}, " +
-               $"{(instance.IsCancellationRequested ? "cancellation requested" : "not canceled")}";
+        return $"CancellationToken: {(instance.CanBeCanceled ? "cancelable" : "non-cancelable")}, "
+            + $"{(instance.IsCancellationRequested ? "cancellation requested" : "not canceled")}";
     }
 }

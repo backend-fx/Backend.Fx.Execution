@@ -35,14 +35,16 @@ public class BackendFxApplication : IBackendFxApplication
     public BackendFxApplication(
         ICompositionRoot compositionRoot,
         IExceptionLogger exceptionLogger,
-        params Assembly[]? assemblies)
+        params Assembly[]? assemblies
+    )
     {
         assemblies ??= [];
 
         _logger.LogInformation(
             "Initializing application with {CompositionRoot} providing services from [{Assemblies}]",
             compositionRoot.GetType().GetDetailedTypeName(),
-            string.Join(", ", assemblies.Select(ass => ass.GetName().Name)));
+            string.Join(", ", assemblies.Select(ass => ass.GetName().Name))
+        );
 
         var invoker = new BackendFxApplicationInvoker(this);
         Invoker = new ExceptionLoggingInvoker(exceptionLogger, invoker);
@@ -50,7 +52,9 @@ public class BackendFxApplication : IBackendFxApplication
         CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
         ExceptionLogger = exceptionLogger;
         _assemblies = new HashSet<Assembly>(assemblies);
-        CompositionRoot.RegisterModules(new ExecutionPipelineModule(withFrozenClockDuringExecution: true));
+        CompositionRoot.RegisterModules(
+            new ExecutionPipelineModule(withFrozenClockDuringExecution: true)
+        );
 
         _bootAction = new Lazy<Task>(async () =>
         {
@@ -59,7 +63,9 @@ public class BackendFxApplication : IBackendFxApplication
             try
             {
                 using var bootCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    _bootCancellation, _shutdownRequestedTokenSource.Token);
+                    _bootCancellation,
+                    _shutdownRequestedTokenSource.Token
+                );
                 var bootCancellation = bootCancellationSource.Token;
 
                 CompositionRoot.Verify();
@@ -96,27 +102,30 @@ public class BackendFxApplication : IBackendFxApplication
     public BackendFxApplicationState State => _stateMachine.State;
 
     public virtual void EnableFeature(IFeature feature) => AddFeature(feature);
-    
+
     public virtual void AddFeature(IFeature feature)
     {
         if (_bootAction.IsValueCreated)
         {
-            throw new InvalidOperationException("Features must be enabled before booting the application");
+            throw new InvalidOperationException(
+                "Features must be enabled before booting the application"
+            );
         }
 
         foreach (var featureAssembly in feature.Assemblies)
         {
             _assemblies.Add(featureAssembly);
         }
-        
+
         _features.Add(feature);
     }
 
-    public TFeature? GetFeature<TFeature>() where TFeature : IFeature
+    public TFeature? GetFeature<TFeature>()
+        where TFeature : IFeature
     {
         return _features.OfType<TFeature>().SingleOrDefault();
     }
-    
+
     public IDisposable UseSingleUserMode()
     {
         if (State == BackendFxApplicationState.SingleUserMode)
@@ -137,20 +146,29 @@ public class BackendFxApplication : IBackendFxApplication
 
     public async Task WaitForBootAsync(CancellationToken cancellation = default)
     {
-        await Task.Run(async () =>
-        {
-            do
-            {
-                if (cancellation.IsCancellationRequested ||
-                    _bootAction.IsValueCreated && _bootAction.Value.Status is TaskStatus.Canceled
-                        or TaskStatus.Faulted or TaskStatus.RanToCompletion)
+        await Task.Run(
+                async () =>
                 {
-                    return;
-                }
+                    do
+                    {
+                        if (
+                            cancellation.IsCancellationRequested
+                            || _bootAction.IsValueCreated
+                                && _bootAction.Value.Status
+                                    is TaskStatus.Canceled
+                                        or TaskStatus.Faulted
+                                        or TaskStatus.RanToCompletion
+                        )
+                        {
+                            return;
+                        }
 
-                await Task.Delay(50, cancellation).ConfigureAwait(false);
-            } while (true);
-        }, cancellation).ConfigureAwait(false);
+                        await Task.Delay(50, cancellation).ConfigureAwait(false);
+                    } while (true);
+                },
+                cancellation
+            )
+            .ConfigureAwait(false);
     }
 
     public void Dispose()
@@ -164,9 +182,9 @@ public class BackendFxApplication : IBackendFxApplication
 
         _logger.LogInformation("Application shut down initialized");
         _stateMachine.EnterSingeUserMode();
-        
+
         _shutdownRequestedTokenSource.Cancel();
-        
+
         // ReSharper disable once SuspiciousTypeConversion.Global
         foreach (var disposableFeature in _features.OfType<IDisposable>())
         {
@@ -176,7 +194,11 @@ public class BackendFxApplication : IBackendFxApplication
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error disposing feature {FeatureType}", disposableFeature.GetType().Name);
+                _logger.LogError(
+                    ex,
+                    "Error disposing feature {FeatureType}",
+                    disposableFeature.GetType().Name
+                );
             }
         }
 
@@ -216,7 +238,7 @@ public class BackendFxApplication : IBackendFxApplication
                     case IAsyncDisposable asyncDisposableFeature:
                         await asyncDisposableFeature.DisposeAsync().ConfigureAwait(false);
                         break;
-                    
+
                     // ReSharper disable once SuspiciousTypeConversion.Global
                     case IDisposable disposableFeature:
                         disposableFeature.Dispose();
@@ -225,7 +247,11 @@ public class BackendFxApplication : IBackendFxApplication
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error disposing feature {FeatureType}", feature.GetType().Name);
+                _logger.LogError(
+                    ex,
+                    "Error disposing feature {FeatureType}",
+                    feature.GetType().Name
+                );
             }
         }
 

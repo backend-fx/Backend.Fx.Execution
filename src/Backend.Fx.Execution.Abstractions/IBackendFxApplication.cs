@@ -21,7 +21,7 @@ public interface IBackendFxApplication : IDisposable, IAsyncDisposable
     /// The invoker runs a given action asynchronously in an application scope with injection facilities
     /// </summary>
     IBackendFxApplicationInvoker Invoker { get; }
-    
+
     CancellationToken ShutdownRequested { get; }
 
     /// <summary>
@@ -54,11 +54,12 @@ public interface IBackendFxApplication : IDisposable, IAsyncDisposable
     /// </summary>
     /// <param name="feature"></param>
     void AddFeature(IFeature feature);
-    
+
     [Obsolete("Use AddFeature instead")]
     void EnableFeature(IFeature feature);
 
-    TFeature? GetFeature<TFeature>() where TFeature : IFeature;
+    TFeature? GetFeature<TFeature>()
+        where TFeature : IFeature;
 
     IDisposable UseSingleUserMode();
 }

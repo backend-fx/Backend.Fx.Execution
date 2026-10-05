@@ -15,47 +15,61 @@ public static class BackendFxApplicationInvokeExtension
         /// <summary>
         ///     Invokes an async action
         /// </summary>
-        public Task DoAsync(Func<IServiceProvider, Task> asyncAction,
-            IIdentity? identity = null)
+        public Task DoAsync(Func<IServiceProvider, Task> asyncAction, IIdentity? identity = null)
         {
-            return application.Invoker.InvokeAsync((sp, _) => asyncAction(sp), identity ?? new AnonymousIdentity());
+            return application.Invoker.InvokeAsync(
+                (sp, _) => asyncAction(sp),
+                identity ?? new AnonymousIdentity()
+            );
         }
 
         /// <summary>
         ///     Invokes an async cancelable action
         /// </summary>
-        public Task DoAsync(Func<IServiceProvider, CancellationToken, Task> asyncAction,
+        public Task DoAsync(
+            Func<IServiceProvider, CancellationToken, Task> asyncAction,
             IIdentity? identity = null,
-            CancellationToken cancellation = default)
+            CancellationToken cancellation = default
+        )
         {
-            return application.Invoker.InvokeAsync(asyncAction, identity ?? new AnonymousIdentity(), cancellation);
+            return application.Invoker.InvokeAsync(
+                asyncAction,
+                identity ?? new AnonymousIdentity(),
+                cancellation
+            );
         }
 
         /// <summary>
         ///     Invokes an async function that returns <see cref="TResult" />
         /// </summary>
-        public async Task<TResult> DoAsync<TResult>(Func<IServiceProvider, Task<TResult>> asyncFunction,
-            IIdentity? identity = null)
+        public async Task<TResult> DoAsync<TResult>(
+            Func<IServiceProvider, Task<TResult>> asyncFunction,
+            IIdentity? identity = null
+        )
         {
             TResult result = default!;
             await application.Invoker.InvokeAsync(
                 async (sp, _) => result = await asyncFunction(sp),
-                identity ?? new AnonymousIdentity());
+                identity ?? new AnonymousIdentity()
+            );
             return result;
         }
 
         /// <summary>
         ///     Invokes an async cancelable function that returns <see cref="TResult" />
         /// </summary>
-        public async Task<TResult> DoAsync<TResult>(Func<IServiceProvider, CancellationToken, Task<TResult>> asyncFunction,
+        public async Task<TResult> DoAsync<TResult>(
+            Func<IServiceProvider, CancellationToken, Task<TResult>> asyncFunction,
             IIdentity? identity = null,
-            CancellationToken cancellation = default)
+            CancellationToken cancellation = default
+        )
         {
             TResult result = default!;
             await application.Invoker.InvokeAsync(
                 async (sp, ct) => result = await asyncFunction(sp, ct),
                 identity ?? new AnonymousIdentity(),
-                cancellation);
+                cancellation
+            );
             return result;
         }
     }
@@ -65,7 +79,7 @@ public static class BackendFxApplicationInvokeExtension
     {
         return new WithInvocation<TService>(invoker);
     }
-    
+
     public static WithAppInvocation<TService> With<TService>(this IBackendFxApplication application)
         where TService : class
     {

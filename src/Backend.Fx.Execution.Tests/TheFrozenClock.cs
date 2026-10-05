@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Backend.Fx.Execution.Tests;
 
-public class TheFrozenClock 
+public class TheFrozenClock
 {
     [Fact]
     public async Task IsFrozen()
@@ -13,6 +13,8 @@ public class TheFrozenClock
         var sut = new FrozenClock(SystemClock.Instance);
         await Task.Delay(10, TestContext.Current.CancellationToken);
         Assert.True(
-            sut.GetCurrentInstant() <= SystemClock.Instance.GetCurrentInstant().Plus(-Duration.FromMilliseconds(9)));
+            sut.GetCurrentInstant()
+                <= SystemClock.Instance.GetCurrentInstant().Plus(-Duration.FromMilliseconds(9))
+        );
     }
 }

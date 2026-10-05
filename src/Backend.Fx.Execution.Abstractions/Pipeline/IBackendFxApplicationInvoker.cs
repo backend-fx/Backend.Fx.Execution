@@ -10,7 +10,7 @@ namespace Backend.Fx.Execution.Pipeline;
 public interface IBackendFxApplicationInvoker
 {
     /// <summary>
-    /// Run a delegate through the full execution pipeline, having its separate injection scope 
+    /// Run a delegate through the full execution pipeline, having its separate injection scope
     /// </summary>
     /// <param name="awaitableAsyncAction">The async action to be invoked by the application</param>
     /// <param name="identity">The acting identity</param>
@@ -18,7 +18,8 @@ public interface IBackendFxApplicationInvoker
     ///     enable cancellation of the async invocation.</param>
     /// <returns>The <see cref="Task"/> representing the async invocation.</returns>
     Task InvokeAsync(
-        Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction, 
-        IIdentity? identity = null, 
-        CancellationToken cancellation = default);
+        Func<IServiceProvider, CancellationToken, Task> awaitableAsyncAction,
+        IIdentity? identity = null,
+        CancellationToken cancellation = default
+    );
 }

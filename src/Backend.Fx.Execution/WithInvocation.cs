@@ -9,7 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Backend.Fx.Execution;
 
 [PublicAPI]
-public class WithInvocation<TService> where TService : class
+public class WithInvocation<TService>
+    where TService : class
 {
     private readonly IBackendFxApplicationInvoker _invoker;
 
@@ -17,64 +18,69 @@ public class WithInvocation<TService> where TService : class
     {
         _invoker = invoker;
     }
-    
+
     /// <summary>
     ///     Invokes an async action on <see cref="TService" />
     /// </summary>
-    public Task DoAsync(
-        Func<TService, Task> asyncAction, 
-        IIdentity? identity = null)
+    public Task DoAsync(Func<TService, Task> asyncAction, IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
         return _invoker.InvokeAsync(
             (sp, _) => asyncAction(sp.GetRequiredService<TService>()),
-            identity);
+            identity
+        );
     }
-    
 
     /// <summary>
     ///     Invokes an async cancelable action on <see cref="TService" />
     /// </summary>
     public Task DoAsync(
-        Func<TService, CancellationToken, Task> asyncAction, 
+        Func<TService, CancellationToken, Task> asyncAction,
         IIdentity? identity = null,
-        CancellationToken cancellation = default)
+        CancellationToken cancellation = default
+    )
     {
         identity ??= new AnonymousIdentity();
         return _invoker.InvokeAsync(
             (sp, ct) => asyncAction(sp.GetRequiredService<TService>(), ct),
-            identity, cancellation);
+            identity,
+            cancellation
+        );
     }
-    
+
     /// <summary>
     ///     Invokes an async function that returns <see cref="TResult" /> on <see cref="TService" />
     /// </summary>
     public async Task<TResult> DoAsync<TResult>(
         Func<TService, Task<TResult>> func,
-        IIdentity? identity = null)
+        IIdentity? identity = null
+    )
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
         await _invoker.InvokeAsync(
             async (sp, _) => result = await func(sp.GetRequiredService<TService>()),
-            identity);
+            identity
+        );
         return result;
     }
-    
+
     /// <summary>
     ///     Invokes an async cancelable function that returns <see cref="TResult" /> on <see cref="TService" />
     /// </summary>
     public async Task<TResult> DoAsync<TResult>(
         Func<TService, CancellationToken, Task<TResult>> func,
         IIdentity? identity = null,
-        CancellationToken cancellation = default)
+        CancellationToken cancellation = default
+    )
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
         await _invoker.InvokeAsync(
             async (sp, ct) => result = await func(sp.GetRequiredService<TService>(), ct),
-            identity, 
-            cancellation);
+            identity,
+            cancellation
+        );
         return result;
     }
 
@@ -87,30 +93,35 @@ public class WithInvocation<TService> where TService : class
     public void Do(Action<TService> action, IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
-        _invoker.InvokeAsync(
-            (sp, _) =>
-            {
-                action(sp.GetRequiredService<TService>());
-                return Task.CompletedTask;
-            }, identity).Wait();
+        _invoker
+            .InvokeAsync(
+                (sp, _) =>
+                {
+                    action(sp.GetRequiredService<TService>());
+                    return Task.CompletedTask;
+                },
+                identity
+            )
+            .Wait();
     }
 
     /// <summary>
     ///     Invokes a synchronous function that returns <see cref="TResult" />on <see cref="TService" />
     /// </summary>
-    public TResult Do<TResult>(
-        Func<TService, TResult> func,
-        IIdentity? identity = null
-    )
+    public TResult Do<TResult>(Func<TService, TResult> func, IIdentity? identity = null)
     {
         identity ??= new AnonymousIdentity();
         TResult result = default!;
-        _invoker.InvokeAsync(
-            (sp, _) =>
-            {
-                result = func(sp.GetRequiredService<TService>());
-                return Task.CompletedTask;
-            }, identity).Wait();
+        _invoker
+            .InvokeAsync(
+                (sp, _) =>
+                {
+                    result = func(sp.GetRequiredService<TService>());
+                    return Task.CompletedTask;
+                },
+                identity
+            )
+            .Wait();
         return result;
     }
 

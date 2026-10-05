@@ -14,9 +14,9 @@ namespace Backend.Fx.Execution.Pipeline;
 public interface IOperation
 {
     int Counter { get; }
-    
+
     Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellation = default);
-        
+
     Task CompleteAsync(CancellationToken cancellation = default);
 
     Task CancelAsync(CancellationToken cancellation = default);
