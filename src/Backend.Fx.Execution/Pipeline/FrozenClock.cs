@@ -18,7 +18,6 @@ public class FrozenClock : IClock
         _logger.LogTrace("Freezing clock at {Instant}", _frozenInstant);
     }
 
-
     public Instant GetCurrentInstant()
     {
         return _frozenInstant;

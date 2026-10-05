@@ -18,22 +18,24 @@ public class TheExceptionLoggingAndHandlingInvoker
         var application = new BackendFxApplication(
             A.Fake<ICompositionRoot>(),
             _exceptionLogger,
-            GetType().Assembly);
+            GetType().Assembly
+        );
         _sut = new ExceptionLoggingAndHandlingInvoker(_exceptionLogger, application.Invoker);
     }
-
 
     [Fact]
     public void SwallowsExceptions()
     {
         _sut.InvokeAsync(
             (_, _) => Task.CompletedTask,
-            new AnonymousIdentity(), 
-            TestContext.Current.CancellationToken);
-        
+            new AnonymousIdentity(),
+            TestContext.Current.CancellationToken
+        );
+
         _sut.InvokeAsync(
             (_, _) => throw new DivideByZeroException(),
             new AnonymousIdentity(),
-            TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken
+        );
     }
 }

@@ -26,11 +26,14 @@ internal sealed class Operation : IOperation
         if (_isActive != null)
         {
             throw new InvalidOperationException(
-                $"Cannot begin an operation that is {(_isActive.Value ? "active" : "terminated")}");
+                $"Cannot begin an operation that is {(_isActive.Value ? "active" : "terminated")}"
+            );
         }
 
-        _lifetimeLogger = _logger.LogDebugDuration($"Beginning operation #{Counter}",
-            $"Terminating operation #{Counter}");
+        _lifetimeLogger = _logger.LogDebugDuration(
+            $"Beginning operation #{Counter}",
+            $"Terminating operation #{Counter}"
+        );
         _isActive = true;
         return Task.CompletedTask;
     }
@@ -41,7 +44,8 @@ internal sealed class Operation : IOperation
         if (_isActive != true)
         {
             throw new InvalidOperationException(
-                $"Cannot complete an operation that is {(_isActive == false ? "terminated" : "not active")}");
+                $"Cannot complete an operation that is {(_isActive == false ? "terminated" : "not active")}"
+            );
         }
 
         _isActive = false;

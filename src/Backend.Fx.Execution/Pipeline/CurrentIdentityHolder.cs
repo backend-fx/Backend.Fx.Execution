@@ -7,12 +7,11 @@ namespace Backend.Fx.Execution.Pipeline;
 [PublicAPI]
 public sealed class CurrentIdentityHolder : CurrentTHolder<IIdentity>
 {
-    public CurrentIdentityHolder()
-    { }
+    public CurrentIdentityHolder() { }
 
-    private CurrentIdentityHolder(IIdentity initial) : base(initial)
-    { }
-        
+    private CurrentIdentityHolder(IIdentity initial)
+        : base(initial) { }
+
     public override IIdentity ProvideInstance()
     {
         return new AnonymousIdentity();
@@ -21,9 +20,10 @@ public sealed class CurrentIdentityHolder : CurrentTHolder<IIdentity>
     protected override string Describe(IIdentity instance)
     {
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract - let's be safe
-        var auth = instance?.IsAuthenticated == true 
-            ? $"authenticated via {instance.AuthenticationType}" 
-            : "not authenticated";
+        var auth =
+            instance?.IsAuthenticated == true
+                ? $"authenticated via {instance.AuthenticationType}"
+                : "not authenticated";
         return $"Identity: {instance?.Name ?? "<NULL>"}, {auth}";
     }
 
@@ -31,7 +31,7 @@ public sealed class CurrentIdentityHolder : CurrentTHolder<IIdentity>
     {
         return Create(new SystemIdentity());
     }
-        
+
     public static ICurrentTHolder<IIdentity> Create(IIdentity identity)
     {
         return new CurrentIdentityHolder(identity);

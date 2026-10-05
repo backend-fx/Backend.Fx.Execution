@@ -8,5 +8,8 @@ namespace Backend.Fx.Execution.Features;
 /// </summary>
 public interface IBootableFeature
 {
-    public Task BootAsync(IBackendFxApplication application, CancellationToken cancellation = default);
+    public Task BootAsync(
+        IBackendFxApplication application,
+        CancellationToken cancellation = default
+    );
 }

@@ -5,9 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Backend.Fx.Execution.Tests;
 
-public interface IOperationSpy : IOperation
-{
-}
+public interface IOperationSpy : IOperation { }
 
 public class OperationSpy : IOperation
 {
@@ -23,7 +21,10 @@ public class OperationSpy : IOperation
         _operation = operation;
     }
 
-    public async Task BeginAsync(IServiceScope serviceScope, CancellationToken cancellation = default)
+    public async Task BeginAsync(
+        IServiceScope serviceScope,
+        CancellationToken cancellation = default
+    )
     {
         _counter++;
         await _operationSpy.BeginAsync(serviceScope, cancellation);
