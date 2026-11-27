@@ -35,19 +35,24 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         await _lifecycle.AdmitAsync(identity, cancellation).ConfigureAwait(false);
 
         _logger.LogInformation("Invoking action as {Identity}", identity.Name);
-        using var serviceScope = BeginScope(identity);
-        using var invocationCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
+
+        using var cancellationOrShutdownRequested = CancellationTokenSource.CreateLinkedTokenSource(
             cancellation,
             _application.ShutdownRequested
         );
-        var invocationCancellation = invocationCancellationSource.Token;
-        serviceScope
-            .ServiceProvider.GetRequiredService<ICurrentTHolder<CancellationToken>>()
-            .ReplaceCurrent(invocationCancellation);
-        var operation = BeginOperationAs(serviceScope, identity);
+
+        using var serviceScope = _application.CompositionRoot.BeginScope();
+
+        var operation = ResolveOperation(
+            serviceScope,
+            cancellationOrShutdownRequested.Token,
+            identity
+        );
+
         var correlation = serviceScope
             .ServiceProvider.GetRequiredService<ICurrentTHolder<Correlation>>()
             .Current;
+
         using var telemetry = InvocationTelemetry.Start(
             _logger,
             identity,
@@ -57,25 +62,54 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
 
         try
         {
-            await operation.BeginAsync(serviceScope, invocationCancellation).ConfigureAwait(false);
-            await awaitableAsyncAction
-                .Invoke(serviceScope.ServiceProvider, invocationCancellation)
+            await operation
+                .BeginAsync(serviceScope, cancellationOrShutdownRequested.Token)
                 .ConfigureAwait(false);
-            await operation.CompleteAsync(invocationCancellation).ConfigureAwait(false);
+
+            await awaitableAsyncAction
+                .Invoke(serviceScope.ServiceProvider, cancellationOrShutdownRequested.Token)
+                .ConfigureAwait(false);
+
+            await operation
+                .CompleteAsync(cancellationOrShutdownRequested.Token)
+                .ConfigureAwait(false);
+
             telemetry.Succeeded();
         }
-        catch (OperationCanceledException) when (invocationCancellation.IsCancellationRequested)
+        catch (OperationCanceledException)
+            when (cancellationOrShutdownRequested.Token.IsCancellationRequested)
         {
             telemetry.Canceled();
-            await CancelSafelyAsync(operation, invocationCancellation).ConfigureAwait(false);
+            await CancelSafelyAsync(operation, cancellationOrShutdownRequested.Token)
+                .ConfigureAwait(false);
+
             throw;
         }
         catch (Exception ex)
         {
             telemetry.Faulted(ex);
-            await CancelSafelyAsync(operation, invocationCancellation).ConfigureAwait(false);
+            await CancelSafelyAsync(operation, cancellationOrShutdownRequested.Token)
+                .ConfigureAwait(false);
+
             throw;
         }
+    }
+
+    private static IOperation ResolveOperation(
+        IServiceScope serviceScope,
+        CancellationToken invocationCancellation,
+        IIdentity identity
+    )
+    {
+        serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
+            .ReplaceCurrent(identity);
+
+        serviceScope
+            .ServiceProvider.GetRequiredService<ICurrentTHolder<CancellationToken>>()
+            .ReplaceCurrent(invocationCancellation);
+
+        return serviceScope.ServiceProvider.GetRequiredService<IOperation>();
     }
 
     private async Task CancelSafelyAsync(IOperation operation, CancellationToken cancellation)
@@ -88,32 +122,5 @@ internal class BackendFxApplicationInvoker : IBackendFxApplicationInvoker
         {
             _logger.LogError(cancelEx, "Failed to cancel the operation");
         }
-    }
-
-    private IServiceScope BeginScope(IIdentity? identity = null)
-    {
-        identity ??= new AnonymousIdentity();
-
-        _logger.LogTrace("Beginning scope for {Identity}", identity.Name);
-        var serviceScope = _application.CompositionRoot.BeginScope();
-
-        serviceScope
-            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
-            .ReplaceCurrent(identity);
-
-        return serviceScope;
-    }
-
-    private static IOperation BeginOperationAs(
-        IServiceScope serviceScope,
-        IIdentity? identity = null
-    )
-    {
-        identity ??= new AnonymousIdentity();
-        var operation = serviceScope.ServiceProvider.GetRequiredService<IOperation>();
-        serviceScope
-            .ServiceProvider.GetRequiredService<ICurrentTHolder<IIdentity>>()
-            .ReplaceCurrent(identity);
-        return operation;
     }
 }
