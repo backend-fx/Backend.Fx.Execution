@@ -30,6 +30,10 @@
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
       Version="10.0.15"
     />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.404" PrivateAssets="All" />
+    <PackageReference
+      Include="Microsoft.SourceLink.GitHub"
+      Version="10.0.404"
+      PrivateAssets="All"
+    />
   </ItemGroup>
 </Project>
