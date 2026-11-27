@@ -34,6 +34,9 @@ public interface IBackendFxApplication : IDisposable, IAsyncDisposable
     /// </summary>
     IExceptionLogger ExceptionLogger { get; }
 
+    /// <summary>
+    /// The assemblies brought by all added features (see <see cref="IFeature.Assemblies"/>), without duplicates
+    /// </summary>
     IEnumerable<Assembly> Assemblies { get; }
 
     BackendFxApplicationState State { get; }
