@@ -22,6 +22,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Backend.Fx.Execution.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Backend.Fx.Execution.Abstractions\Backend.Fx.Execution.Abstractions.csproj" />
   </ItemGroup>
 

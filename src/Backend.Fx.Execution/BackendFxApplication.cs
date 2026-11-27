@@ -17,255 +17,73 @@ namespace Backend.Fx.Execution;
 [PublicAPI]
 public class BackendFxApplication : IBackendFxApplication
 {
-    private readonly CancellationTokenSource _shutdownRequestedTokenSource = new();
-    private readonly BackendFxApplicationStateMachine _stateMachine = new();
     private readonly ILogger _logger = Log.Create<BackendFxApplication>();
-    private readonly List<IFeature> _features = [];
-    private readonly Lazy<Task> _bootAction;
-    private readonly HashSet<Assembly> _assemblies;
-    private CancellationToken _bootCancellation;
-    private bool _disposed;
+    private readonly ApplicationLifecycle _lifecycle;
 
     /// <summary>
-    /// Initializes the application's runtime instance
+    /// Initializes the application's runtime instance. Assemblies to provide services from are brought by
+    /// features, see <see cref="IFeature.Assemblies"/>.
     /// </summary>
     /// <param name="compositionRoot">The composition root of the dependency injection framework</param>
-    /// <param name="exceptionLogger"></param>
-    /// <param name="assemblies"></param>
-    public BackendFxApplication(
-        ICompositionRoot compositionRoot,
-        IExceptionLogger exceptionLogger,
-        params Assembly[]? assemblies
-    )
+    /// <param name="exceptionLogger">The global exception logger of this application</param>
+    public BackendFxApplication(ICompositionRoot compositionRoot, IExceptionLogger exceptionLogger)
     {
-        assemblies ??= [];
-
         _logger.LogInformation(
-            "Initializing application with {CompositionRoot} providing services from [{Assemblies}]",
-            compositionRoot.GetType().GetDetailedTypeName(),
-            string.Join(", ", assemblies.Select(ass => ass.GetName().Name))
+            "Initializing application with {CompositionRoot}",
+            compositionRoot.GetType().GetDetailedTypeName()
         );
 
-        var invoker = new BackendFxApplicationInvoker(this);
+        _lifecycle = new ApplicationLifecycle(this);
+
+        var invoker = new BackendFxApplicationInvoker(this, _lifecycle);
         Invoker = new ExceptionLoggingInvoker(exceptionLogger, invoker);
 
         CompositionRoot = new LogRegistrationsDecorator(compositionRoot);
         ExceptionLogger = exceptionLogger;
-        _assemblies = new HashSet<Assembly>(assemblies);
         CompositionRoot.RegisterModules(
             new ExecutionPipelineModule(withFrozenClockDuringExecution: true)
         );
-
-        _bootAction = new Lazy<Task>(async () =>
-        {
-            _logger.LogInformation("Booting application");
-
-            try
-            {
-                using var bootCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    _bootCancellation,
-                    _shutdownRequestedTokenSource.Token
-                );
-                var bootCancellation = bootCancellationSource.Token;
-
-                CompositionRoot.Verify();
-
-                _stateMachine.EnterSingeUserMode();
-
-                // ReSharper disable once SuspiciousTypeConversion.Global - implemented in feature extensions
-                foreach (var bootableFeature in _features.OfType<IBootableFeature>())
-                {
-                    await bootableFeature.BootAsync(this, bootCancellation).ConfigureAwait(false);
-                }
-
-                _stateMachine.EnterMultiUserMode();
-            }
-            catch (Exception ex)
-            {
-                _stateMachine.EnterCrashed();
-                _logger.LogCritical(ex, "Boot failed!");
-                throw;
-            }
-        });
     }
 
-    public IEnumerable<Assembly> Assemblies => _assemblies;
+    /// <summary>
+    /// The assemblies brought by all added features
+    /// </summary>
+    public IEnumerable<Assembly> Assemblies =>
+        _lifecycle.Features.SelectMany(feature => feature.Assemblies).Distinct();
 
     public IBackendFxApplicationInvoker Invoker { get; }
 
-    public CancellationToken ShutdownRequested => _shutdownRequestedTokenSource.Token;
+    public CancellationToken ShutdownRequested => _lifecycle.ShutdownRequested;
 
     public ICompositionRoot CompositionRoot { get; }
 
     public IExceptionLogger ExceptionLogger { get; }
 
-    public BackendFxApplicationState State => _stateMachine.State;
+    public BackendFxApplicationState State => _lifecycle.State;
 
     public virtual void EnableFeature(IFeature feature) => AddFeature(feature);
 
-    public virtual void AddFeature(IFeature feature)
-    {
-        if (_bootAction.IsValueCreated)
-        {
-            throw new InvalidOperationException(
-                "Features must be enabled before booting the application"
-            );
-        }
-
-        foreach (var featureAssembly in feature.Assemblies)
-        {
-            _assemblies.Add(featureAssembly);
-        }
-
-        _features.Add(feature);
-    }
+    public virtual void AddFeature(IFeature feature) => _lifecycle.AddFeature(feature);
 
     public TFeature? GetFeature<TFeature>()
         where TFeature : IFeature
     {
-        return _features.OfType<TFeature>().SingleOrDefault();
+        return _lifecycle.Features.OfType<TFeature>().SingleOrDefault();
     }
 
-    public IDisposable UseSingleUserMode()
-    {
-        if (State == BackendFxApplicationState.SingleUserMode)
-        {
-            return new DelegateDisposable(() => { });
-        }
+    public IDisposable UseSingleUserMode() => _lifecycle.UseSingleUserMode();
 
-        _stateMachine.EnterSingeUserMode();
-        return new DelegateDisposable(() => _stateMachine.EnterMultiUserMode());
-    }
+    public Task BootAsync(CancellationToken cancellation = default) =>
+        _lifecycle.BootAsync(cancellation);
 
-    public async Task BootAsync(CancellationToken cancellation = default)
-    {
-        _bootCancellation = cancellation;
-        _features.ForEach(feat => feat.Enable(this));
-        await _bootAction.Value.ConfigureAwait(false);
-    }
+    public Task WaitForBootAsync(CancellationToken cancellation = default) =>
+        _lifecycle.WaitForBootAsync(cancellation);
 
-    public async Task WaitForBootAsync(CancellationToken cancellation = default)
-    {
-        await Task.Run(
-                async () =>
-                {
-                    do
-                    {
-                        if (
-                            cancellation.IsCancellationRequested
-                            || _bootAction.IsValueCreated
-                                && _bootAction.Value.Status
-                                    is TaskStatus.Canceled
-                                        or TaskStatus.Faulted
-                                        or TaskStatus.RanToCompletion
-                        )
-                        {
-                            return;
-                        }
-
-                        await Task.Delay(50, cancellation).ConfigureAwait(false);
-                    } while (true);
-                },
-                cancellation
-            )
-            .ConfigureAwait(false);
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        _logger.LogInformation("Application shut down initialized");
-        _stateMachine.EnterSingeUserMode();
-
-        _shutdownRequestedTokenSource.Cancel();
-
-        // ReSharper disable once SuspiciousTypeConversion.Global
-        foreach (var disposableFeature in _features.OfType<IDisposable>())
-        {
-            try
-            {
-                disposableFeature.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error disposing feature {FeatureType}",
-                    disposableFeature.GetType().Name
-                );
-            }
-        }
-
-        try
-        {
-            CompositionRoot.Dispose();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error disposing {ApplicationType}", GetType().Name);
-        }
-
-        _shutdownRequestedTokenSource.Dispose();
-    }
+    public void Dispose() => _lifecycle.Shutdown();
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        _logger.LogInformation("Application shut down initialized");
-        _stateMachine.EnterSingeUserMode();
-
-        _shutdownRequestedTokenSource.Cancel();
-
-        foreach (var feature in _features)
-        {
-            try
-            {
-                switch (feature)
-                {
-                    // ReSharper disable once SuspiciousTypeConversion.Global
-                    case IAsyncDisposable asyncDisposableFeature:
-                        await asyncDisposableFeature.DisposeAsync().ConfigureAwait(false);
-                        break;
-
-                    // ReSharper disable once SuspiciousTypeConversion.Global
-                    case IDisposable disposableFeature:
-                        disposableFeature.Dispose();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error disposing feature {FeatureType}",
-                    feature.GetType().Name
-                );
-            }
-        }
-
-        try
-        {
-            await CompositionRoot.DisposeAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error disposing {ApplicationType}", GetType().Name);
-        }
-
-        _shutdownRequestedTokenSource.Dispose();
-
+        await _lifecycle.ShutdownAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 }
