@@ -15,11 +15,7 @@ public class TheExceptionLoggingAndHandlingInvoker
 
     public TheExceptionLoggingAndHandlingInvoker()
     {
-        var application = new BackendFxApplication(
-            A.Fake<ICompositionRoot>(),
-            _exceptionLogger,
-            GetType().Assembly
-        );
+        var application = new BackendFxApplication(A.Fake<ICompositionRoot>(), _exceptionLogger);
         _sut = new ExceptionLoggingAndHandlingInvoker(_exceptionLogger, application.Invoker);
     }
 
